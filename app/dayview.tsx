@@ -1,16 +1,139 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+
+type AlarmReminder = {
+  id: string;
+  type: "Reminder" | "Alarm";
+  label: string;
+  time: string;
+  repeatUnit: string;
+  repeatValue: string;
+};
 
 export default function DayView() {
   const { date, shift } = useLocalSearchParams();
   const router = useRouter();
   const [note, setNote] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [label, setLabel] = useState("");
+  const [time, setTime] = useState("");
+  const [type, setType] = useState<"Reminder" | "Alarm">("Reminder");
+  const [repeatUnit, setRepeatUnit] = useState("Once");
+  const [repeatValue, setRepeatValue] = useState("");
+  const [showRepeat, setShowRepeat] = useState(false);
+  const [items, setItems] = useState<AlarmReminder[]>([]);
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const repeatUnits = ["Once", "Minutes", "Hours", "Days", "Weeks", "Weekdays", "Shift Days"];
+
+  useEffect(() => {
+    loadNote();
+    loadItems();
+  }, []);
+
+  async function loadNote() {
+    try {
+      const saved = await AsyncStorage.getItem(`note_${date}`);
+      if (saved) setNote(saved);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function loadItems() {
+    try {
+      const saved = await AsyncStorage.getItem(`items_${date}`);
+      if (saved) setItems(JSON.parse(saved));
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function handleSaveNote() {
+    try {
+      await AsyncStorage.setItem(`note_${date}`, note);
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function handleAddItem() {
+    if (!label) {
+      Alert.alert("Please enter a label!");
+      return;
+    }
+
+    const parts = time.split(":");
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+
+    if (isNaN(hours) || isNaN(minutes)) {
+      Alert.alert("Please enter a valid time (e.g. 0630)");
+      return;
+    }
+
+    const triggerDate = new Date(date as string);
+    triggerDate.setHours(hours, minutes, 0, 0);
+
+    if (triggerDate < new Date()) {
+      Alert.alert("That time has already passed!");
+      return;
+    }
+
+    let repeatInterval = undefined;
+    if (repeatUnit === "Minutes" && repeatValue) {
+      repeatInterval = parseInt(repeatValue) * 60;
+    } else if (repeatUnit === "Hours" && repeatValue) {
+      repeatInterval = parseInt(repeatValue) * 60 * 60;
+    } else if (repeatUnit === "Days" && repeatValue) {
+      repeatInterval = parseInt(repeatValue) * 60 * 60 * 24;
+    } else if (repeatUnit === "Weeks" && repeatValue) {
+      repeatInterval = parseInt(repeatValue) * 60 * 60 * 24 * 7;
+    } else if (repeatUnit === "Weekdays") {
+      repeatInterval = 60 * 60 * 24;
+    } else if (repeatUnit === "Shift Days") {
+      repeatInterval = 60 * 60 * 24 * 9;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: type === "Alarm" ? "⏰ ShiftScore Alarm" : "🔔 ShiftScore Reminder",
+        body: label,
+        sound: true,
+      },
+      trigger: repeatInterval
+        ? { seconds: repeatInterval, repeats: true }
+        : triggerDate,
+    });
+
+    const newItem: AlarmReminder = {
+      id: Date.now().toString(),
+      type,
+      label,
+      time,
+      repeatUnit,
+      repeatValue,
+    };
+
+    const updated = [...items, newItem];
+    setItems(updated);
+    await AsyncStorage.setItem(`items_${date}`, JSON.stringify(updated));
+    setLabel("");
+    setTime("");
+    setRepeatValue("");
+    setRepeatUnit("Once");
+    setShowRepeat(false);
+    Alert.alert(`✅ ${type} set for ${time}${repeatUnit !== "Once" ? ` — repeating every ${repeatValue} ${repeatUnit}` : ""}`);
+  }
+
+  async function handleDelete(id: string) {
+    const updated = items.filter((i) => i.id !== id);
+    setItems(updated);
+    await AsyncStorage.setItem(`items_${date}`, JSON.stringify(updated));
   }
 
   function getShiftColor(shift: string) {
@@ -25,9 +148,15 @@ export default function DayView() {
     return "✅";
   }
 
+  function getRepeatLabel(item: AlarmReminder) {
+    if (item.repeatUnit === "Once") return "Once";
+    if (item.repeatValue) return `Every ${item.repeatValue} ${item.repeatUnit}`;
+    return `Every ${item.repeatUnit}`;
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <TouchableOpacity onPress={() => router.push("/calendar")} style={styles.backBtn}>
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
@@ -37,6 +166,7 @@ export default function DayView() {
         <Text style={styles.headerShift}>{shift} Shift</Text>
       </View>
 
+      {/* NOTES */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📝 Notes</Text>
         <TextInput
@@ -47,21 +177,141 @@ export default function DayView() {
           onChangeText={setNote}
           placeholderTextColor="#aaa"
         />
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>{saved ? "✅ Saved!" : "Save Note"}</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNote}>
+          <Text style={styles.saveBtnText}>{noteSaved ? "✅ Saved!" : "Save Note"}</Text>
         </TouchableOpacity>
       </View>
 
+      {/* REMINDERS & ALARMS */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Reminders</Text>
-        <Text style={styles.comingSoon}>Coming soon!</Text>
+        <Text style={styles.sectionTitle}>🔔 Reminders & Alarms</Text>
+
+        {/* Type Toggle */}
+        <View style={styles.toggleRow}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, type === "Reminder" && styles.toggleActive]}
+            onPress={() => setType("Reminder")}
+          >
+            <Text style={[styles.toggleText, type === "Reminder" && styles.toggleTextActive]}>
+              🔔 Reminder
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, type === "Alarm" && styles.toggleActive]}
+            onPress={() => setType("Alarm")}
+          >
+            <Text style={[styles.toggleText, type === "Alarm" && styles.toggleTextActive]}>
+              ⏰ Alarm
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder={type === "Alarm" ? "Alarm label (e.g. Wake up!)" : "Reminder message"}
+          value={label}
+          onChangeText={setLabel}
+          placeholderTextColor="#aaa"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type time e.g. 0630 → 06:30"
+          value={time}
+          onChangeText={(text) => {
+            const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
+            if (cleaned.length >= 3) {
+              setTime(cleaned.slice(0, 2) + ":" + cleaned.slice(2));
+            } else {
+              setTime(cleaned);
+            }
+          }}
+          placeholderTextColor="#aaa"
+          keyboardType="numeric"
+          maxLength={5}
+        />
+
+        {/* Repeat Toggle Button */}
+        <TouchableOpacity
+          style={[styles.repeatToggleBtn, repeatUnit !== "Once" && styles.repeatToggleActive]}
+          onPress={() => setShowRepeat(!showRepeat)}
+        >
+          <Text style={[styles.repeatToggleText, repeatUnit !== "Once" && styles.repeatToggleTextActive]}>
+            🔄 {repeatUnit !== "Once" ? `Repeat: Every ${repeatValue} ${repeatUnit}` : "Repeat: Off — tap to set"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Repeat Panel */}
+        {showRepeat && (
+          <View style={styles.repeatPanel}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.repeatScroll}>
+              {repeatUnits.map((unit) => (
+                <TouchableOpacity
+                  key={unit}
+                  style={[styles.repeatChip, repeatUnit === unit && styles.repeatChipActive]}
+                  onPress={() => {
+                    setRepeatUnit(unit);
+                    if (unit === "Once") {
+                      setShowRepeat(false);
+                      setRepeatValue("");
+                    }
+                  }}
+                >
+                  <Text style={[styles.repeatChipText, repeatUnit === unit && styles.repeatChipTextActive]}>
+                    {unit}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {["Minutes", "Hours", "Days", "Weeks"].includes(repeatUnit) && (
+              <TextInput
+                style={[styles.input, { marginTop: 10 }]}
+                placeholder={`Every how many ${repeatUnit.toLowerCase()}? (e.g. 2)`}
+                value={repeatValue}
+                onChangeText={setRepeatValue}
+                placeholderTextColor="#aaa"
+                keyboardType="numeric"
+              />
+            )}
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.addBtn} onPress={handleAddItem}>
+          <Text style={styles.addBtnText}>
+            {type === "Alarm" ? "Set Alarm ⏰" : "Set Reminder 🔔"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* List */}
+        {items.length > 0 && (
+          <View style={styles.itemList}>
+            {items.map((item) => (
+              <View key={item.id} style={styles.itemCard}>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemType}>
+                    {item.type === "Alarm" ? "⏰" : "🔔"} {item.type}
+                  </Text>
+                  <Text style={styles.itemTime}>{item.time}</Text>
+                  <Text style={styles.itemLabel}>{item.label}</Text>
+                  <Text style={styles.itemRepeat}>🔄 {getRepeatLabel(item)}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                  <Text style={styles.deleteText}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
+      {/* ACTIVITY */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>🏋️ Activity</Text>
         <Text style={styles.comingSoon}>Coming soon!</Text>
       </View>
 
+      {/* FOOD */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>🍎 Food & Calories</Text>
         <Text style={styles.comingSoon}>Coming soon!</Text>
@@ -144,6 +394,140 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 10,
+  },
+  toggleBtn: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+    alignItems: "center",
+  },
+  toggleActive: {
+    backgroundColor: "#7B68EE",
+    borderColor: "#7B68EE",
+  },
+  toggleText: {
+    fontSize: 14,
+    color: "#888",
+    fontWeight: "bold",
+  },
+  toggleTextActive: {
+    color: "#fff",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 15,
+    color: "#2d2d2d",
+    marginBottom: 10,
+  },
+  repeatToggleBtn: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  repeatToggleActive: {
+    backgroundColor: "#e8e4ff",
+    borderColor: "#7B68EE",
+    borderWidth: 1,
+  },
+  repeatToggleText: {
+    fontSize: 14,
+    color: "#888",
+    fontWeight: "bold",
+  },
+  repeatToggleTextActive: {
+    color: "#7B68EE",
+  },
+  repeatPanel: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+  repeatScroll: {
+    flexDirection: "row",
+  },
+  repeatChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#eee",
+    marginRight: 8,
+    backgroundColor: "#fff",
+  },
+  repeatChipActive: {
+    backgroundColor: "#7B68EE",
+    borderColor: "#7B68EE",
+  },
+  repeatChipText: {
+    fontSize: 13,
+    color: "#888",
+    fontWeight: "bold",
+  },
+  repeatChipTextActive: {
+    color: "#fff",
+  },
+  addBtn: {
+    backgroundColor: "#7B68EE",
+    borderRadius: 10,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  addBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  itemList: {
+    marginTop: 16,
+  },
+  itemCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
+  itemInfo: {
+    flex: 1,
+  },
+  itemType: {
+    fontSize: 12,
+    color: "#7B68EE",
+    fontWeight: "bold",
+  },
+  itemTime: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2d2d2d",
+  },
+  itemLabel: {
+    fontSize: 13,
+    color: "#555",
+  },
+  itemRepeat: {
+    fontSize: 12,
+    color: "#aaa",
+    marginTop: 2,
+  },
+  deleteText: {
+    fontSize: 20,
   },
   comingSoon: {
     color: "#aaa",
