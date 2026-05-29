@@ -23,10 +23,9 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
+    <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
+      <Stack.Screen name="index" options={{ gestureEnabled: false }} />
       <Stack.Screen name="calendar" />
-      <Stack.Screen name="alarms" />
       <Stack.Screen name="dayview" />
     </Stack>
   );

@@ -41,6 +41,10 @@ export default function Calendar() {
 
   return (
     <ScrollView style={styles.container}>
+      <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
+        <Text style={styles.backText}>← Back</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>🗓️ Shift Calendar</Text>
 
       <View style={styles.legend}>
@@ -67,9 +71,7 @@ export default function Calendar() {
                   params: { date: dateStr, shift: item.shift }
                 })}
               >
-                <Text style={styles.dayNum}>
-                  {item.date.getDate()}
-                </Text>
+                <Text style={styles.dayNum}>{item.date.getDate()}</Text>
                 <Text style={styles.monthText}>
                   {item.date.toLocaleString("default", { month: "short" })}
                 </Text>
@@ -89,6 +91,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     paddingTop: 60,
     paddingHorizontal: 8,
+  },
+  backBtn: {
+    padding: 8,
+    marginBottom: 8,
+  },
+  backText: {
+    fontSize: 16,
+    color: "#4A90E2",
+    fontWeight: "bold",
   },
   title: {
     fontSize: 24,
