@@ -31,6 +31,7 @@ export default function RootLayout() {
       <Stack.Screen name="food" />
       <Stack.Screen name="health" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="stats" />
     </Stack>
   );
 }
