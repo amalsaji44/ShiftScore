@@ -75,31 +75,20 @@ const FOOD_DATABASE: FoodDBItem[] = [
   { name: "Apple", calories: 95, protein: 0, carbs: 25, fat: 0, portion: "1 medium", category: "Fruits" },
   { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0, portion: "1 medium", category: "Fruits" },
   { name: "Orange", calories: 62, protein: 1, carbs: 15, fat: 0, portion: "1 medium", category: "Fruits" },
-  { name: "Grapes", calories: 104, protein: 1, carbs: 27, fat: 0, portion: "1 cup", category: "Fruits" },
+  { name: "Mango", calories: 201, protein: 3, carbs: 50, fat: 1, portion: "1 whole", category: "Fruits" },
+  { name: "Avocado", calories: 234, protein: 3, carbs: 12, fat: 21, portion: "1 whole", category: "Fruits" },
   { name: "Strawberries", calories: 49, protein: 1, carbs: 12, fat: 0, portion: "1 cup", category: "Fruits" },
   { name: "Blueberries", calories: 84, protein: 1, carbs: 21, fat: 0, portion: "1 cup", category: "Fruits" },
-  { name: "Mango", calories: 201, protein: 3, carbs: 50, fat: 1, portion: "1 whole", category: "Fruits" },
   { name: "Watermelon", calories: 86, protein: 2, carbs: 22, fat: 0, portion: "2 cups", category: "Fruits" },
-  { name: "Pineapple", calories: 82, protein: 1, carbs: 22, fat: 0, portion: "1 cup", category: "Fruits" },
-  { name: "Avocado", calories: 234, protein: 3, carbs: 12, fat: 21, portion: "1 whole", category: "Fruits" },
-  { name: "Peach", calories: 59, protein: 1, carbs: 14, fat: 0, portion: "1 medium", category: "Fruits" },
-  { name: "Pear", calories: 101, protein: 1, carbs: 27, fat: 0, portion: "1 medium", category: "Fruits" },
-  { name: "Kiwi", calories: 42, protein: 1, carbs: 10, fat: 0, portion: "1 medium", category: "Fruits" },
-  { name: "Dates", calories: 277, protein: 2, carbs: 75, fat: 0, portion: "100g", category: "Fruits" },
   { name: "Broccoli", calories: 55, protein: 4, carbs: 11, fat: 1, portion: "1 cup", category: "Vegetables" },
-  { name: "Spinach", calories: 7, protein: 1, carbs: 1, fat: 0, portion: "1 cup raw", category: "Vegetables" },
+  { name: "Spinach", calories: 7, protein: 1, carbs: 1, fat: 0, portion: "1 cup", category: "Vegetables" },
   { name: "Carrots", calories: 52, protein: 1, carbs: 12, fat: 0, portion: "1 medium", category: "Vegetables" },
   { name: "Tomato", calories: 22, protein: 1, carbs: 5, fat: 0, portion: "1 medium", category: "Vegetables" },
-  { name: "Cucumber", calories: 16, protein: 1, carbs: 4, fat: 0, portion: "1 cup", category: "Vegetables" },
-  { name: "Bell pepper", calories: 31, protein: 1, carbs: 7, fat: 0, portion: "1 medium", category: "Vegetables" },
-  { name: "Onion", calories: 44, protein: 1, carbs: 10, fat: 0, portion: "1 medium", category: "Vegetables" },
   { name: "Potato", calories: 161, protein: 4, carbs: 37, fat: 0, portion: "1 medium", category: "Vegetables" },
   { name: "Sweet potato", calories: 103, protein: 2, carbs: 24, fat: 0, portion: "1 medium", category: "Vegetables" },
   { name: "Mushrooms", calories: 15, protein: 2, carbs: 2, fat: 0, portion: "1 cup", category: "Vegetables" },
-  { name: "Kale", calories: 33, protein: 3, carbs: 6, fat: 1, portion: "1 cup", category: "Vegetables" },
   { name: "Olive oil", calories: 119, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
   { name: "Coconut oil", calories: 121, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
-  { name: "Vegetable oil", calories: 120, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
   { name: "Butter", calories: 102, protein: 0, carbs: 0, fat: 12, portion: "1 tbsp", category: "Oils" },
   { name: "Ghee", calories: 112, protein: 0, carbs: 0, fat: 13, portion: "1 tbsp", category: "Oils" },
   { name: "Peanut butter", calories: 190, protein: 8, carbs: 6, fat: 16, portion: "2 tbsp", category: "Oils" },
@@ -120,7 +109,6 @@ const FOOD_DATABASE: FoodDBItem[] = [
   { name: "Pasta cooked", calories: 220, protein: 8, carbs: 43, fat: 1, portion: "1 cup", category: "Grains" },
   { name: "White bread", calories: 79, protein: 3, carbs: 15, fat: 1, portion: "1 slice", category: "Grains" },
   { name: "Whole wheat bread", calories: 69, protein: 4, carbs: 12, fat: 1, portion: "1 slice", category: "Grains" },
-  { name: "Bagel plain", calories: 270, protein: 11, carbs: 53, fat: 2, portion: "1 bagel", category: "Grains" },
   { name: "Oatmeal cooked", calories: 150, protein: 5, carbs: 27, fat: 3, portion: "1 cup", category: "Grains" },
   { name: "Roti whole wheat", calories: 120, protein: 3, carbs: 18, fat: 4, portion: "1 roti", category: "Grains" },
   { name: "Naan bread", calories: 262, protein: 9, carbs: 45, fat: 5, portion: "1 piece", category: "Grains" },
@@ -154,12 +142,10 @@ const FOOD_DATABASE: FoodDBItem[] = [
   { name: "McDonalds French Fries medium", calories: 320, protein: 4, carbs: 44, fat: 15, portion: "1 medium", category: "McDonalds" },
   { name: "McDonalds McNuggets 6pc", calories: 280, protein: 14, carbs: 18, fat: 17, portion: "6 pieces", category: "McDonalds" },
   { name: "McDonalds Egg McMuffin", calories: 300, protein: 18, carbs: 30, fat: 12, portion: "1 sandwich", category: "McDonalds" },
-  { name: "McDonalds Big Breakfast", calories: 760, protein: 28, carbs: 67, fat: 44, portion: "1 meal", category: "McDonalds" },
   { name: "Subway 6 inch Turkey", calories: 280, protein: 18, carbs: 46, fat: 4, portion: "6 inch", category: "Subway" },
   { name: "Subway 6 inch Chicken", calories: 310, protein: 23, carbs: 47, fat: 5, portion: "6 inch", category: "Subway" },
   { name: "Subway 6 inch Tuna", calories: 480, protein: 22, carbs: 45, fat: 24, portion: "6 inch", category: "Subway" },
   { name: "Subway Footlong Turkey", calories: 560, protein: 36, carbs: 92, fat: 8, portion: "12 inch", category: "Subway" },
-  { name: "Subway Footlong Chicken", calories: 620, protein: 46, carbs: 94, fat: 10, portion: "12 inch", category: "Subway" },
   { name: "KFC Original chicken piece", calories: 320, protein: 28, carbs: 10, fat: 19, portion: "1 piece", category: "KFC" },
   { name: "KFC Chicken sandwich", calories: 490, protein: 28, carbs: 51, fat: 20, portion: "1 sandwich", category: "KFC" },
   { name: "KFC Poutine", calories: 500, protein: 12, carbs: 60, fat: 25, portion: "1 small", category: "KFC" },
@@ -173,14 +159,12 @@ const FOOD_DATABASE: FoodDBItem[] = [
   { name: "Pizza Pizza slice cheese", calories: 290, protein: 12, carbs: 38, fat: 10, portion: "1 slice", category: "Pizza Pizza" },
   { name: "Pizza Pizza slice pepperoni", calories: 330, protein: 14, carbs: 38, fat: 14, portion: "1 slice", category: "Pizza Pizza" },
   { name: "Popeyes Chicken sandwich", calories: 700, protein: 35, carbs: 60, fat: 42, portion: "1 sandwich", category: "Popeyes" },
-  { name: "Popeyes Chicken piece spicy", calories: 360, protein: 22, carbs: 18, fat: 22, portion: "1 piece", category: "Popeyes" },
   { name: "Chicken biryani", calories: 520, protein: 28, carbs: 65, fat: 15, portion: "1 plate", category: "South Asian" },
   { name: "Dal tadka", calories: 180, protein: 10, carbs: 25, fat: 5, portion: "1 cup", category: "South Asian" },
   { name: "Butter chicken", calories: 380, protein: 28, carbs: 15, fat: 22, portion: "1 cup", category: "South Asian" },
   { name: "Chicken tikka masala", calories: 350, protein: 30, carbs: 12, fat: 20, portion: "1 cup", category: "South Asian" },
   { name: "Samosa", calories: 150, protein: 3, carbs: 18, fat: 8, portion: "1 piece", category: "South Asian" },
   { name: "Mango lassi", calories: 290, protein: 7, carbs: 48, fat: 8, portion: "1 glass", category: "South Asian" },
-  { name: "Chana masala", calories: 270, protein: 14, carbs: 40, fat: 8, portion: "1 cup", category: "South Asian" },
   { name: "Shawarma chicken wrap", calories: 550, protein: 35, carbs: 55, fat: 20, portion: "1 wrap", category: "Middle Eastern" },
   { name: "Falafel wrap", calories: 480, protein: 18, carbs: 60, fat: 18, portion: "1 wrap", category: "Middle Eastern" },
   { name: "Hummus", calories: 166, protein: 8, carbs: 18, fat: 8, portion: "100g", category: "Middle Eastern" },
@@ -190,9 +174,7 @@ const FOOD_DATABASE: FoodDBItem[] = [
   { name: "Sweet and sour chicken", calories: 400, protein: 22, carbs: 48, fat: 12, portion: "1 cup", category: "Chinese" },
   { name: "Thai chicken curry", calories: 380, protein: 28, carbs: 18, fat: 22, portion: "1 cup", category: "Thai" },
   { name: "Pad Thai chicken", calories: 450, protein: 25, carbs: 55, fat: 14, portion: "1 plate", category: "Thai" },
-  { name: "Tom yum soup", calories: 100, protein: 8, carbs: 8, fat: 4, portion: "1 bowl", category: "Thai" },
   { name: "Spaghetti bolognese", calories: 530, protein: 28, carbs: 65, fat: 16, portion: "1 plate", category: "Italian" },
-  { name: "Pasta carbonara", calories: 600, protein: 25, carbs: 65, fat: 28, portion: "1 plate", category: "Italian" },
   { name: "Caesar salad", calories: 180, protein: 8, carbs: 12, fat: 12, portion: "1 bowl", category: "Italian" },
   { name: "Burrito chicken", calories: 680, protein: 38, carbs: 75, fat: 22, portion: "1 burrito", category: "Mexican" },
   { name: "Taco chicken", calories: 280, protein: 18, carbs: 25, fat: 12, portion: "2 tacos", category: "Mexican" },
@@ -446,18 +428,6 @@ export default function DayView() {
     await AsyncStorage.setItem(`items_${date}`, JSON.stringify(updated));
   }
 
-  function getShiftColor(s: string) {
-    if (s === "Day") return "#4A90E2";
-    if (s === "Night") return "#7B68EE";
-    return "#4CAF50";
-  }
-
-  function getShiftEmoji(s: string) {
-    if (s === "Day") return "🌅";
-    if (s === "Night") return "🌙";
-    return "✅";
-  }
-
   function getIntensityColor(i: string) {
     if (i === "Easy") return "#4CAF50";
     if (i === "Moderate") return "#4A90E2";
@@ -481,17 +451,16 @@ export default function DayView() {
 
   function getNetStatus() {
     if (totalFoodCal === 0 && totalBurnedCal === 0) return null;
-    if (netCalories < -100) return { label: "Deficit 🟢", color: "#4CAF50", desc: "You're burning more than you eat" };
-    if (netCalories > 100) return { label: "Surplus 🔴", color: "#FF3B30", desc: "You're eating more than you burn" };
-    return { label: "Balanced 🟡", color: "#FF9500", desc: "Calories in ≈ calories out" };
+    if (netCalories < -100) return { label: "Deficit 🟢", color: "#4CAF50" };
+    if (netCalories > 100) return { label: "Surplus 🔴", color: "#FF3B30" };
+    return { label: "Balanced 🟡", color: "#FF9500" };
   }
-
-  const netStatus = getNetStatus();
 
   function getMealEntries(meal: string) {
     return foodEntries.filter(e => e.mealType === meal);
   }
 
+  const netStatus = getNetStatus();
   const notePreview = note.length > 60 ? note.substring(0, 60) + "..." : note;
 
   return (
@@ -500,22 +469,35 @@ export default function DayView() {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
-      <View style={[styles.header, { backgroundColor: getShiftColor(shift as string) }]}>
-        <Text style={styles.headerEmoji}>{getShiftEmoji(shift as string)}</Text>
+      {/* HEADER */}
+      <View style={styles.header}>
         <Text style={styles.headerDate}>{date}</Text>
-        <Text style={styles.headerShift}>{shift} Shift</Text>
+        <View style={styles.shiftBadge}>
+          <Text style={styles.shiftBadgeText}>{shift as string}</Text>
+        </View>
       </View>
 
-      {/* NET CALORIE SUMMARY */}
+      {/* NET CALORIE CARD */}
       {netStatus && (
         <View style={[styles.netCard, { borderLeftColor: netStatus.color }]}>
-          <Text style={styles.netTitle}>Net Calories</Text>
-          <Text style={[styles.netValue, { color: netStatus.color }]}>{netCalories > 0 ? "+" : ""}{netCalories} cal</Text>
-          <Text style={styles.netLabel}>{netStatus.label}</Text>
-          <Text style={styles.netDesc}>{netStatus.desc}</Text>
           <View style={styles.netRow}>
-            <Text style={styles.netItem}>🍎 {totalFoodCal} consumed</Text>
-            <Text style={styles.netItem}>🔥 {totalBurnedCal} burned</Text>
+            <View style={styles.netItem}>
+              <Text style={styles.netLabel}>Consumed</Text>
+              <Text style={styles.netValue}>🍎 {totalFoodCal} cal</Text>
+            </View>
+            <View style={styles.netDivider} />
+            <View style={styles.netItem}>
+              <Text style={styles.netLabel}>Burned</Text>
+              <Text style={styles.netValue}>🔥 {totalBurnedCal} cal</Text>
+            </View>
+            <View style={styles.netDivider} />
+            <View style={styles.netItem}>
+              <Text style={styles.netLabel}>Net</Text>
+              <Text style={[styles.netValueBig, { color: netStatus.color }]}>
+                {netCalories > 0 ? "+" : ""}{netCalories}
+              </Text>
+              <Text style={[styles.netStatus, { color: netStatus.color }]}>{netStatus.label}</Text>
+            </View>
           </View>
         </View>
       )}
@@ -526,12 +508,8 @@ export default function DayView() {
           <Text style={styles.sectionTitle}>📝 Notes</Text>
           <Text style={styles.chevron}>{noteExpanded ? "▲" : "▼"}</Text>
         </View>
-        {!noteExpanded && note.length > 0 && (
-          <Text style={styles.preview}>{notePreview}</Text>
-        )}
-        {!noteExpanded && note.length === 0 && (
-          <Text style={styles.emptyHint}>Tap to add notes</Text>
-        )}
+        {!noteExpanded && note.length > 0 && <Text style={styles.preview}>{notePreview}</Text>}
+        {!noteExpanded && note.length === 0 && <Text style={styles.emptyHint}>Tap to add notes</Text>}
       </TouchableOpacity>
 
       {noteExpanded && (
@@ -542,7 +520,7 @@ export default function DayView() {
             multiline
             value={note}
             onChangeText={setNote}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#444"
           />
           <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNote}>
             <Text style={styles.saveBtnText}>{noteSaved ? "✅ Saved!" : "Save Note"}</Text>
@@ -550,7 +528,7 @@ export default function DayView() {
         </View>
       )}
 
-      {/* 2. FOOD & CALORIES */}
+      {/* 2. FOOD */}
       <TouchableOpacity style={styles.sectionCard} onPress={() => setFoodExpanded(!foodExpanded)}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>🍎 Food & Calories</Text>
@@ -566,31 +544,23 @@ export default function DayView() {
           {foodEntries.length > 0 && (
             <>
               <View style={styles.macroRow}>
-                <View style={styles.macroItem}>
-                  <Text style={styles.macroEmoji}>🔥</Text>
-                  <Text style={styles.macroValue}>{totalFoodCal}</Text>
-                  <Text style={styles.macroLabel}>Cal</Text>
-                </View>
-                <View style={styles.macroItem}>
-                  <Text style={styles.macroEmoji}>🥩</Text>
-                  <Text style={styles.macroValue}>{totalFoodProtein}g</Text>
-                  <Text style={styles.macroLabel}>Protein</Text>
-                </View>
-                <View style={styles.macroItem}>
-                  <Text style={styles.macroEmoji}>🍞</Text>
-                  <Text style={styles.macroValue}>{totalFoodCarbs}g</Text>
-                  <Text style={styles.macroLabel}>Carbs</Text>
-                </View>
-                <View style={styles.macroItem}>
-                  <Text style={styles.macroEmoji}>🥑</Text>
-                  <Text style={styles.macroValue}>{totalFoodFat}g</Text>
-                  <Text style={styles.macroLabel}>Fat</Text>
-                </View>
+                {[
+                  { emoji: "🔥", val: totalFoodCal, label: "Cal" },
+                  { emoji: "🥩", val: `${totalFoodProtein}g`, label: "Protein" },
+                  { emoji: "🍞", val: `${totalFoodCarbs}g`, label: "Carbs" },
+                  { emoji: "🥑", val: `${totalFoodFat}g`, label: "Fat" },
+                ].map((item, i) => (
+                  <View key={i} style={styles.macroItem}>
+                    <Text style={styles.macroEmoji}>{item.emoji}</Text>
+                    <Text style={styles.macroValue}>{item.val}</Text>
+                    <Text style={styles.macroLabel}>{item.label}</Text>
+                  </View>
+                ))}
               </View>
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${Math.min((totalFoodCal / 2000) * 100, 100)}%` as any }]} />
               </View>
-              <Text style={styles.progressLabel}>{totalFoodCal} / 2000 cal daily goal</Text>
+              <Text style={styles.progressLabel}>{totalFoodCal} / 2000 cal</Text>
             </>
           )}
 
@@ -639,27 +609,23 @@ export default function DayView() {
         <View style={styles.expandedContent}>
           {workouts.length > 0 && (
             <View style={styles.macroRow}>
-              <View style={styles.macroItem}>
-                <Text style={styles.macroEmoji}>🔥</Text>
-                <Text style={styles.macroValue}>{totalBurnedCal}</Text>
-                <Text style={styles.macroLabel}>Cal Burned</Text>
-              </View>
-              <View style={styles.macroItem}>
-                <Text style={styles.macroEmoji}>⏱️</Text>
-                <Text style={styles.macroValue}>{totalWorkoutMin}</Text>
-                <Text style={styles.macroLabel}>Minutes</Text>
-              </View>
-              <View style={styles.macroItem}>
-                <Text style={styles.macroEmoji}>💪</Text>
-                <Text style={styles.macroValue}>{workouts.length}</Text>
-                <Text style={styles.macroLabel}>Workouts</Text>
-              </View>
+              {[
+                { emoji: "🔥", val: totalBurnedCal, label: "Burned" },
+                { emoji: "⏱️", val: totalWorkoutMin, label: "Minutes" },
+                { emoji: "💪", val: workouts.length, label: "Sessions" },
+              ].map((item, i) => (
+                <View key={i} style={styles.macroItem}>
+                  <Text style={styles.macroEmoji}>{item.emoji}</Text>
+                  <Text style={styles.macroValue}>{item.val}</Text>
+                  <Text style={styles.macroLabel}>{item.label}</Text>
+                </View>
+              ))}
             </View>
           )}
 
           <TouchableOpacity style={styles.syncBtn}>
             <Text style={styles.syncBtnText}>⌚ Sync from Fitbit</Text>
-            <Text style={styles.syncSubText}>Connect Fitbit to auto-sync</Text>
+            <Text style={styles.syncSubText}>Auto-fill workouts</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.logBtn} onPress={() => setShowWorkoutModal(true)}>
@@ -685,6 +651,8 @@ export default function DayView() {
               </TouchableOpacity>
             </View>
           ))}
+
+          {workouts.length === 0 && <Text style={styles.emptyHint}>No workouts logged yet</Text>}
         </View>
       )}
 
@@ -721,7 +689,7 @@ export default function DayView() {
             placeholder={type === "Alarm" ? "Alarm label" : "Reminder message"}
             value={label}
             onChangeText={setLabel}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#444"
           />
 
           <TextInput
@@ -730,13 +698,10 @@ export default function DayView() {
             value={time}
             onChangeText={(text) => {
               const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
-              if (cleaned.length >= 3) {
-                setTime(cleaned.slice(0, 2) + ":" + cleaned.slice(2));
-              } else {
-                setTime(cleaned);
-              }
+              if (cleaned.length >= 3) setTime(cleaned.slice(0, 2) + ":" + cleaned.slice(2));
+              else setTime(cleaned);
             }}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#444"
             keyboardType="numeric"
             maxLength={5}
           />
@@ -772,7 +737,7 @@ export default function DayView() {
                   placeholder={`Every how many ${repeatUnit.toLowerCase()}?`}
                   value={repeatValue}
                   onChangeText={setRepeatValue}
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor="#444"
                   keyboardType="numeric"
                 />
               )}
@@ -844,11 +809,11 @@ export default function DayView() {
                   </TouchableOpacity>
 
                   <TextInput
-                    style={styles.input}
+                    style={styles.modalInput}
                     placeholder="Search food..."
                     value={searchText}
                     onChangeText={handleFoodSearch}
-                    placeholderTextColor="#aaa"
+                    placeholderTextColor="#444"
                   />
 
                   {searchResults.map(food => (
@@ -881,11 +846,11 @@ export default function DayView() {
                         <Text style={styles.macro}>🥑 {selectedFood.fat}g</Text>
                       </View>
                       <TextInput
-                        style={[styles.input, { marginTop: 10 }]}
+                        style={[styles.modalInput, { marginTop: 10 }]}
                         placeholder="Portion size"
                         value={portion}
                         onChangeText={setPortion}
-                        placeholderTextColor="#aaa"
+                        placeholderTextColor="#444"
                       />
                       <TouchableOpacity style={styles.confirmBtn} onPress={addFoodEntry}>
                         <Text style={styles.confirmBtnText}>Add to Log ✅</Text>
@@ -895,13 +860,13 @@ export default function DayView() {
                 </>
               ) : (
                 <>
-                  <Text style={styles.customNote}>⭐ Saved to your personal database for future searches!</Text>
-                  <TextInput style={styles.input} placeholder="Food name *" value={customName} onChangeText={setCustomName} placeholderTextColor="#aaa" />
-                  <TextInput style={styles.input} placeholder="Calories *" value={customCalories} onChangeText={setCustomCalories} keyboardType="numeric" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.input} placeholder="Protein (g)" value={customProtein} onChangeText={setCustomProtein} keyboardType="numeric" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.input} placeholder="Carbs (g)" value={customCarbs} onChangeText={setCustomCarbs} keyboardType="numeric" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.input} placeholder="Fat (g)" value={customFat} onChangeText={setCustomFat} keyboardType="numeric" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.input} placeholder="Portion size" value={customPortion} onChangeText={setCustomPortion} placeholderTextColor="#aaa" />
+                  <Text style={styles.customNote}>⭐ Saved to your personal database!</Text>
+                  <TextInput style={styles.modalInput} placeholder="Food name *" value={customName} onChangeText={setCustomName} placeholderTextColor="#444" />
+                  <TextInput style={styles.modalInput} placeholder="Calories *" value={customCalories} onChangeText={setCustomCalories} keyboardType="numeric" placeholderTextColor="#444" />
+                  <TextInput style={styles.modalInput} placeholder="Protein (g)" value={customProtein} onChangeText={setCustomProtein} keyboardType="numeric" placeholderTextColor="#444" />
+                  <TextInput style={styles.modalInput} placeholder="Carbs (g)" value={customCarbs} onChangeText={setCustomCarbs} keyboardType="numeric" placeholderTextColor="#444" />
+                  <TextInput style={styles.modalInput} placeholder="Fat (g)" value={customFat} onChangeText={setCustomFat} keyboardType="numeric" placeholderTextColor="#444" />
+                  <TextInput style={styles.modalInput} placeholder="Portion size" value={customPortion} onChangeText={setCustomPortion} placeholderTextColor="#444" />
                   <TouchableOpacity style={styles.confirmBtn} onPress={saveCustomFood}>
                     <Text style={styles.confirmBtnText}>Save & Add ⭐</Text>
                   </TouchableOpacity>
@@ -938,17 +903,17 @@ export default function DayView() {
               </View>
 
               {selectedType.name === "Custom" && (
-                <TextInput style={styles.input} placeholder="Workout name" value={customWorkoutType} onChangeText={setCustomWorkoutType} placeholderTextColor="#aaa" />
+                <TextInput style={styles.modalInput} placeholder="Workout name" value={customWorkoutType} onChangeText={setCustomWorkoutType} placeholderTextColor="#444" />
               )}
 
               <Text style={styles.modalLabel}>Duration (minutes) *</Text>
-              <TextInput style={styles.input} placeholder="e.g. 45" value={duration} onChangeText={setDuration} keyboardType="numeric" placeholderTextColor="#aaa" />
+              <TextInput style={styles.modalInput} placeholder="e.g. 45" value={duration} onChangeText={setDuration} keyboardType="numeric" placeholderTextColor="#444" />
 
               <Text style={styles.modalLabel}>Calories Burned</Text>
-              <TextInput style={styles.input} placeholder="e.g. 320" value={wCalories} onChangeText={setWCalories} keyboardType="numeric" placeholderTextColor="#aaa" />
+              <TextInput style={styles.modalInput} placeholder="e.g. 320" value={wCalories} onChangeText={setWCalories} keyboardType="numeric" placeholderTextColor="#444" />
 
               <Text style={styles.modalLabel}>Avg Heart Rate (bpm)</Text>
-              <TextInput style={styles.input} placeholder="e.g. 145" value={heartRate} onChangeText={setHeartRate} keyboardType="numeric" placeholderTextColor="#aaa" />
+              <TextInput style={styles.modalInput} placeholder="e.g. 145" value={heartRate} onChangeText={setHeartRate} keyboardType="numeric" placeholderTextColor="#444" />
 
               <Text style={styles.modalLabel}>Intensity</Text>
               <View style={styles.intensityRow}>
@@ -958,13 +923,13 @@ export default function DayView() {
                     style={[styles.intensityChip, intensity === level && { backgroundColor: getIntensityColor(level) }]}
                     onPress={() => setIntensity(level)}
                   >
-                    <Text style={[styles.intensityChipText, intensity === level && styles.intensityChipTextActive]}>{level}</Text>
+                    <Text style={[styles.intensityChipText, intensity === level && { color: "#fff" }]}>{level}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               <Text style={styles.modalLabel}>Notes</Text>
-              <TextInput style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]} placeholder="How did it feel?" value={workoutNotes} onChangeText={setWorkoutNotes} multiline placeholderTextColor="#aaa" />
+              <TextInput style={[styles.modalInput, { minHeight: 80, textAlignVertical: "top" }]} placeholder="How did it feel?" value={workoutNotes} onChangeText={setWorkoutNotes} multiline placeholderTextColor="#444" />
 
               <TouchableOpacity style={styles.confirmBtn} onPress={saveWorkout}>
                 <Text style={styles.confirmBtnText}>Save Workout 💪</Text>
@@ -983,124 +948,125 @@ export default function DayView() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#111" },
   backBtn: { padding: 16, paddingTop: 60 },
   backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
-  header: { margin: 16, borderRadius: 16, padding: 24, alignItems: "center" },
-  headerEmoji: { fontSize: 40, marginBottom: 8 },
+  header: { paddingHorizontal: 16, paddingBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerDate: { fontSize: 20, fontWeight: "bold", color: "#fff" },
-  headerShift: { fontSize: 16, color: "#fff", marginTop: 4, opacity: 0.9 },
-  netCard: { backgroundColor: "#fff", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, borderLeftWidth: 4, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  netTitle: { fontSize: 14, color: "#888", fontWeight: "bold", marginBottom: 4 },
-  netValue: { fontSize: 32, fontWeight: "bold", marginBottom: 4 },
-  netLabel: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d", marginBottom: 4 },
-  netDesc: { fontSize: 13, color: "#888", marginBottom: 12 },
-  netRow: { flexDirection: "row", justifyContent: "space-between" },
-  netItem: { fontSize: 13, color: "#555", fontWeight: "bold" },
-  sectionCard: { backgroundColor: "#fff", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  shiftBadge: { backgroundColor: "#2a2a2a", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 1, borderColor: "#333" },
+  shiftBadgeText: { color: "#888", fontSize: 13, fontWeight: "bold" },
+  netCard: { backgroundColor: "#1a1a1a", margin: 16, marginTop: 0, borderRadius: 16, padding: 16, borderLeftWidth: 3, borderWidth: 1, borderColor: "#2a2a2a" },
+  netRow: { flexDirection: "row", alignItems: "center" },
+  netItem: { flex: 1, alignItems: "center" },
+  netDivider: { width: 1, height: 40, backgroundColor: "#2a2a2a" },
+  netLabel: { fontSize: 11, color: "#666", marginBottom: 4 },
+  netValue: { fontSize: 13, color: "#888", fontWeight: "bold" },
+  netValueBig: { fontSize: 20, fontWeight: "bold" },
+  netStatus: { fontSize: 11, marginTop: 2 },
+  sectionCard: { backgroundColor: "#1a1a1a", margin: 16, marginTop: 0, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: "#2a2a2a" },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#2d2d2d" },
-  chevron: { fontSize: 14, color: "#888" },
-  sectionSummary: { fontSize: 14, color: "#888", marginTop: 6 },
+  sectionTitle: { fontSize: 17, fontWeight: "bold", color: "#fff" },
+  chevron: { fontSize: 12, color: "#555" },
+  sectionSummary: { fontSize: 13, color: "#666", marginTop: 6 },
   preview: { fontSize: 13, color: "#555", marginTop: 6, fontStyle: "italic" },
-  emptyHint: { fontSize: 13, color: "#bbb", marginTop: 6 },
-  expandedContent: { backgroundColor: "#fff", marginHorizontal: 16, marginTop: -8, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, padding: 20, paddingTop: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, marginBottom: 4 },
-  noteInput: { borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, fontSize: 15, color: "#2d2d2d", minHeight: 120, textAlignVertical: "top" },
+  emptyHint: { fontSize: 13, color: "#333", marginTop: 6 },
+  expandedContent: { backgroundColor: "#1a1a1a", marginHorizontal: 16, marginTop: -8, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, padding: 18, paddingTop: 12, borderWidth: 1, borderTopWidth: 0, borderColor: "#2a2a2a", marginBottom: 4 },
+  noteInput: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, fontSize: 15, color: "#fff", minHeight: 120, textAlignVertical: "top", backgroundColor: "#222" },
   saveBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 12 },
   saveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   macroRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 12 },
   macroItem: { alignItems: "center" },
   macroEmoji: { fontSize: 20, marginBottom: 2 },
-  macroValue: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d" },
-  macroLabel: { fontSize: 11, color: "#888" },
-  progressBar: { height: 6, backgroundColor: "#f0f0f0", borderRadius: 3, overflow: "hidden", marginBottom: 4 },
-  progressFill: { height: "100%", backgroundColor: "#4CAF50", borderRadius: 3 },
-  progressLabel: { fontSize: 11, color: "#888", textAlign: "center", marginBottom: 12 },
-  logBtn: { backgroundColor: "#4A90E2", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
-  logBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  macroValue: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  macroLabel: { fontSize: 11, color: "#666" },
+  progressBar: { height: 4, backgroundColor: "#222", borderRadius: 2, overflow: "hidden", marginBottom: 4 },
+  progressFill: { height: "100%", backgroundColor: "#4CAF50", borderRadius: 2 },
+  progressLabel: { fontSize: 11, color: "#666", textAlign: "center", marginBottom: 12 },
+  logBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 12 },
+  logBtnText: { color: "#fff", fontSize: 15, fontWeight: "bold" },
   mealSection: { marginBottom: 10 },
-  mealTitle: { fontSize: 14, fontWeight: "bold", color: "#555", marginBottom: 6 },
-  foodCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 10, marginBottom: 6 },
+  mealTitle: { fontSize: 13, fontWeight: "bold", color: "#666", marginBottom: 6 },
+  foodCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 10, marginBottom: 6, backgroundColor: "#222" },
   foodInfo: { flex: 1 },
-  foodName: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
-  foodPortion: { fontSize: 12, color: "#888" },
+  foodName: { fontSize: 14, fontWeight: "bold", color: "#fff" },
+  foodPortion: { fontSize: 12, color: "#666" },
   foodRight: { alignItems: "flex-end" },
   foodCal: { fontSize: 14, fontWeight: "bold", color: "#4CAF50" },
-  deleteText: { fontSize: 18, marginTop: 4 },
-  syncBtn: { backgroundColor: "#f0f0f0", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
-  syncBtnText: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
-  syncSubText: { fontSize: 12, color: "#888", marginTop: 2 },
-  workoutCard: { flexDirection: "row", alignItems: "flex-start", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, marginBottom: 8 },
+  deleteText: { fontSize: 16, marginTop: 4 },
+  syncBtn: { backgroundColor: "#111", borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 12, borderWidth: 1, borderColor: "#4A90E2" },
+  syncBtnText: { fontSize: 13, fontWeight: "bold", color: "#4A90E2" },
+  syncSubText: { fontSize: 11, color: "#666", marginTop: 2 },
+  workoutCard: { flexDirection: "row", alignItems: "flex-start", borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 12, padding: 12, marginBottom: 8, backgroundColor: "#222" },
   workoutEmoji: { fontSize: 28, marginRight: 12 },
   workoutInfo: { flex: 1 },
-  workoutType: { fontSize: 15, fontWeight: "bold", color: "#2d2d2d" },
+  workoutType: { fontSize: 15, fontWeight: "bold", color: "#fff" },
   workoutStats: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
-  workoutStat: { fontSize: 12, color: "#555" },
+  workoutStat: { fontSize: 12, color: "#666" },
   intensityBadge: { alignSelf: "flex-start", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginTop: 6 },
   intensityText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   toggleRow: { flexDirection: "row", marginBottom: 12, gap: 10 },
-  toggleBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
+  toggleBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#2a2a2a", alignItems: "center", backgroundColor: "#222" },
   toggleActive: { backgroundColor: "#7B68EE", borderColor: "#7B68EE" },
-  toggleText: { fontSize: 14, color: "#888", fontWeight: "bold" },
+  toggleText: { fontSize: 14, color: "#666", fontWeight: "bold" },
   toggleTextActive: { color: "#fff" },
-  input: { borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, fontSize: 15, color: "#2d2d2d", marginBottom: 10 },
-  repeatToggleBtn: { backgroundColor: "#f0f0f0", borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 10 },
-  repeatToggleActive: { backgroundColor: "#e8e4ff", borderColor: "#7B68EE", borderWidth: 1 },
-  repeatToggleText: { fontSize: 14, color: "#888", fontWeight: "bold" },
+  input: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, fontSize: 15, color: "#fff", marginBottom: 10, backgroundColor: "#222" },
+  repeatToggleBtn: { backgroundColor: "#222", borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 10, borderWidth: 1, borderColor: "#2a2a2a" },
+  repeatToggleActive: { backgroundColor: "#1a1a3a", borderColor: "#7B68EE" },
+  repeatToggleText: { fontSize: 14, color: "#666", fontWeight: "bold" },
   repeatToggleTextActive: { color: "#7B68EE" },
-  repeatPanel: { backgroundColor: "#f9f9f9", borderRadius: 10, padding: 12, marginBottom: 10 },
-  repeatChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#eee", marginRight: 8, backgroundColor: "#fff" },
+  repeatPanel: { backgroundColor: "#111", borderRadius: 10, padding: 12, marginBottom: 10 },
+  repeatChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#2a2a2a", marginRight: 8, backgroundColor: "#222" },
   repeatChipActive: { backgroundColor: "#7B68EE", borderColor: "#7B68EE" },
-  repeatChipText: { fontSize: 13, color: "#888", fontWeight: "bold" },
+  repeatChipText: { fontSize: 13, color: "#666", fontWeight: "bold" },
   repeatChipTextActive: { color: "#fff" },
   addBtn: { backgroundColor: "#7B68EE", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 4 },
   addBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  itemCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, marginBottom: 8, marginTop: 8 },
+  itemCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, marginBottom: 8, marginTop: 8, backgroundColor: "#222" },
   itemInfo: { flex: 1 },
   itemType: { fontSize: 12, color: "#7B68EE", fontWeight: "bold" },
-  itemTime: { fontSize: 20, fontWeight: "bold", color: "#2d2d2d" },
-  itemLabel: { fontSize: 13, color: "#555" },
-  itemRepeat: { fontSize: 12, color: "#aaa", marginTop: 2 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "90%" },
-  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#2d2d2d", marginBottom: 20, textAlign: "center" },
-  modalLabel: { fontSize: 14, fontWeight: "bold", color: "#555", marginBottom: 8, marginTop: 4 },
+  itemTime: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+  itemLabel: { fontSize: 13, color: "#888" },
+  itemRepeat: { fontSize: 12, color: "#555", marginTop: 2 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.85)", justifyContent: "flex-end" },
+  modalContent: { backgroundColor: "#1a1a1a", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "90%", borderWidth: 1, borderColor: "#333" },
+  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 20, textAlign: "center" },
+  modalLabel: { fontSize: 14, fontWeight: "bold", color: "#888", marginBottom: 8, marginTop: 4 },
+  modalInput: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, fontSize: 15, color: "#fff", marginBottom: 10, backgroundColor: "#222" },
   mealTypeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  mealChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#eee" },
+  mealChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#2a2a2a", backgroundColor: "#222" },
   mealChipActive: { backgroundColor: "#4CAF50", borderColor: "#4CAF50" },
-  mealChipText: { fontSize: 13, color: "#888", fontWeight: "bold" },
+  mealChipText: { fontSize: 13, color: "#666", fontWeight: "bold" },
   mealChipTextActive: { color: "#fff" },
   modeToggle: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  modeBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
+  modeBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#2a2a2a", alignItems: "center", backgroundColor: "#222" },
   modeBtnActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
-  modeBtnText: { fontSize: 14, color: "#888", fontWeight: "bold" },
+  modeBtnText: { fontSize: 14, color: "#666", fontWeight: "bold" },
   modeBtnTextActive: { color: "#fff" },
-  voiceBtn: { backgroundColor: "#f0f0f0", borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 12 },
+  voiceBtn: { backgroundColor: "#222", borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 12, borderWidth: 1, borderColor: "#2a2a2a" },
   voiceBtnActive: { backgroundColor: "#FF3B30" },
-  voiceBtnText: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d" },
-  resultItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, marginBottom: 8 },
-  resultItemActive: { backgroundColor: "#e8f4ff", borderColor: "#4A90E2" },
-  resultName: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
-  resultPortion: { fontSize: 12, color: "#888" },
+  voiceBtnText: { fontSize: 16, fontWeight: "bold", color: "#888" },
+  resultItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, marginBottom: 8, backgroundColor: "#222" },
+  resultItemActive: { backgroundColor: "#1a2a3a", borderColor: "#4A90E2" },
+  resultName: { fontSize: 14, fontWeight: "bold", color: "#fff" },
+  resultPortion: { fontSize: 12, color: "#666" },
   resultCalories: { fontSize: 16, fontWeight: "bold", color: "#4CAF50" },
   notFoundBtn: { padding: 12, alignItems: "center" },
   notFoundText: { fontSize: 14, color: "#4A90E2", fontWeight: "bold" },
-  selectedCard: { backgroundColor: "#f0f7ff", borderRadius: 12, padding: 16, marginBottom: 12 },
-  selectedTitle: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d", marginBottom: 8 },
-  macro: { fontSize: 13, color: "#555", fontWeight: "bold" },
-  customNote: { fontSize: 13, color: "#7B68EE", backgroundColor: "#f0edff", borderRadius: 10, padding: 12, marginBottom: 12, textAlign: "center" },
+  selectedCard: { backgroundColor: "#1a2a1a", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#2a3a2a" },
+  selectedTitle: { fontSize: 16, fontWeight: "bold", color: "#fff", marginBottom: 8 },
+  macro: { fontSize: 13, color: "#888", fontWeight: "bold" },
+  customNote: { fontSize: 13, color: "#7B68EE", backgroundColor: "#1a1a2a", borderRadius: 10, padding: 12, marginBottom: 12, textAlign: "center" },
   confirmBtn: { backgroundColor: "#4CAF50", borderRadius: 12, padding: 16, alignItems: "center", marginTop: 8 },
   confirmBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   cancelBtn: { borderRadius: 12, padding: 16, alignItems: "center", marginTop: 8 },
-  cancelBtnText: { color: "#888", fontSize: 16 },
+  cancelBtnText: { color: "#555", fontSize: 16 },
   typeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
-  typeChip: { alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, width: "28%" },
+  typeChip: { alignItems: "center", borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 12, padding: 12, width: "28%", backgroundColor: "#222" },
   typeChipActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
   typeEmoji: { fontSize: 24, marginBottom: 4 },
-  typeName: { fontSize: 11, color: "#888", fontWeight: "bold" },
+  typeName: { fontSize: 11, color: "#666", fontWeight: "bold" },
   typeNameActive: { color: "#fff" },
   intensityRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  intensityChip: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
-  intensityChipText: { fontSize: 12, color: "#888", fontWeight: "bold" },
-  intensityChipTextActive: { color: "#fff" },
+  intensityChip: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#2a2a2a", alignItems: "center", backgroundColor: "#222" },
+  intensityChipText: { fontSize: 12, color: "#666", fontWeight: "bold" },
 });

@@ -90,7 +90,6 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [customLabel, setCustomLabel] = useState("");
 
-  // Reload schedule every time calendar is opened!!
   useFocusEffect(
     useCallback(() => {
       loadSchedule();
@@ -143,7 +142,7 @@ export default function Calendar() {
         weatherMap[date] = { emoji: getWeatherEmoji(code, tempMax), tempMax, tempMin };
       });
       setWeather(weatherMap);
-    } catch (e) { console.log("Weather fetch failed", e); }
+    } catch (e) { console.log(e); }
     setLoadingWeather(false);
   }
 
@@ -161,8 +160,7 @@ export default function Calendar() {
     const days = [];
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      const shift = getShiftForDate(date);
-      days.push({ date, shift });
+      days.push({ date, shift: getShiftForDate(date) });
     }
     return days;
   }
@@ -180,10 +178,6 @@ export default function Calendar() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
-  function getDayShort(date: Date) {
-    return date.toLocaleString("default", { weekday: "short" });
-  }
-
   function prevMonth() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   }
@@ -194,7 +188,6 @@ export default function Calendar() {
 
   const rows = getRows();
   const monthName = currentMonth.toLocaleString("default", { month: "long", year: "numeric" });
-
   const labelCategories = [
     { title: "🏃 Running", items: DAY_LABELS.slice(0, 3) },
     { title: "🏋️ Weight Training", items: DAY_LABELS.slice(3, 16) },
@@ -208,39 +201,40 @@ export default function Calendar() {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
+      {/* Month Nav */}
       <View style={styles.monthNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
           <Text style={styles.navBtnText}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{monthName}</Text>
+        <View style={styles.monthInfo}>
+          <Text style={styles.monthTitle}>{monthName}</Text>
+          <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day</Text>
+        </View>
         <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
           <Text style={styles.navBtnText}>›</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Schedule name */}
-      <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day cycle</Text>
-
+      {/* Legend */}
       <View style={styles.legend}>
         {[...new Map(schedule.shifts.map(s => [s.name, s])).values()].map(shift => (
-          <Text key={shift.id} style={[styles.legendItem, { color: shift.color }]}>
-            {shift.emoji} {shift.name}
-          </Text>
+          <View key={shift.id} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: shift.color }]} />
+            <Text style={styles.legendText}>{shift.emoji} {shift.name}</Text>
+          </View>
         ))}
         {loadingWeather && <ActivityIndicator size="small" color="#888" />}
       </View>
 
+      {/* Calendar */}
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.rowBlock}>
           <View style={styles.dayNameRow}>
             {row.map((item, colIndex) => {
               const isWeekend = item.date.getDay() === 0 || item.date.getDay() === 6;
               return (
-                <Text
-                  key={colIndex}
-                  style={[styles.dayName, isWeekend && styles.dayNameWeekend]}
-                >
-                  {getDayShort(item.date)}
+                <Text key={colIndex} style={[styles.dayName, isWeekend && styles.dayNameWeekend]}>
+                  {item.date.toLocaleString("default", { weekday: "short" })}
                 </Text>
               );
             })}
@@ -260,7 +254,7 @@ export default function Calendar() {
                   <TouchableOpacity
                     style={[
                       styles.tile,
-                      { backgroundColor: item.shift.color },
+                      { backgroundColor: item.shift.color + "CC" },
                       isToday && styles.todayTile,
                       isPast && styles.pastTile,
                     ]}
@@ -268,37 +262,26 @@ export default function Calendar() {
                       pathname: "/dayview",
                       params: { date: item.date.toDateString(), shift: item.shift.name }
                     })}
-                    onLongPress={() => {
-                      setSelectedDate(dateKey);
-                      setShowLabelModal(true);
-                    }}
+                    onLongPress={() => { setSelectedDate(dateKey); setShowLabelModal(true); }}
                   >
                     <Text style={styles.dayNum}>{item.date.getDate()}</Text>
                     <Text style={styles.shiftEmoji}>{item.shift.emoji}</Text>
                     {weatherData && <Text style={styles.weatherEmoji}>{weatherData.emoji}</Text>}
-                    {weatherData && (
-                      <Text style={styles.temp}>↑{weatherData.tempMax}° ↓{weatherData.tempMin}°</Text>
-                    )}
-                    {isToday && <Text style={styles.todayDot}>●</Text>}
+                    {weatherData && <Text style={styles.temp}>↑{weatherData.tempMax}° ↓{weatherData.tempMin}°</Text>}
+                    {isToday && <View style={styles.todayDot} />}
                   </TouchableOpacity>
 
                   {dayLabel ? (
                     <TouchableOpacity
                       style={[styles.labelBadge, { backgroundColor: labelData?.color || "#555" }]}
-                      onPress={() => {
-                        setSelectedDate(dateKey);
-                        setShowLabelModal(true);
-                      }}
+                      onPress={() => { setSelectedDate(dateKey); setShowLabelModal(true); }}
                     >
                       <Text style={styles.labelText}>{dayLabel}</Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
                       style={styles.addLabelBtn}
-                      onPress={() => {
-                        setSelectedDate(dateKey);
-                        setShowLabelModal(true);
-                      }}
+                      onPress={() => { setSelectedDate(dateKey); setShowLabelModal(true); }}
                     >
                       <Text style={styles.addLabelText}>+</Text>
                     </TouchableOpacity>
@@ -310,6 +293,7 @@ export default function Calendar() {
         </View>
       ))}
 
+      {/* Label Modal */}
       {showLabelModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -317,14 +301,14 @@ export default function Calendar() {
             <Text style={styles.modalSubtitle}>{selectedDate}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.customSection}>
-                <Text style={styles.catTitle}>✏️ Custom Label</Text>
+                <Text style={styles.catTitle}>✏️ Custom</Text>
                 <View style={styles.customRow}>
                   <TextInput
                     style={styles.customInput}
                     placeholder="Type your own label..."
                     value={customLabel}
                     onChangeText={setCustomLabel}
-                    placeholderTextColor="#aaa"
+                    placeholderTextColor="#444"
                     maxLength={20}
                   />
                   <TouchableOpacity
@@ -354,7 +338,7 @@ export default function Calendar() {
               ))}
 
               <TouchableOpacity
-                style={styles.clearLabelBtn}
+                style={styles.clearBtn}
                 onPress={() => {
                   if (selectedDate) {
                     const updated = { ...labels };
@@ -362,17 +346,13 @@ export default function Calendar() {
                     setLabels(updated);
                     AsyncStorage.setItem("day_labels", JSON.stringify(updated));
                     setShowLabelModal(false);
-                    setCustomLabel("");
                   }
                 }}
               >
-                <Text style={styles.clearLabelText}>🗑️ Remove Label</Text>
+                <Text style={styles.clearBtnText}>🗑️ Remove Label</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => { setShowLabelModal(false); setCustomLabel(""); }}
-              >
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => { setShowLabelModal(false); setCustomLabel(""); }}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -384,50 +364,53 @@ export default function Calendar() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#111" },
   backBtn: { padding: 16, paddingTop: 60 },
   backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
-  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 4 },
+  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 8 },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 32, color: "#4A90E2", fontWeight: "bold" },
-  monthTitle: { fontSize: 22, fontWeight: "bold", color: "#2d2d2d" },
-  scheduleName: { textAlign: "center", fontSize: 13, color: "#888", marginBottom: 8 },
+  monthInfo: { alignItems: "center" },
+  monthTitle: { fontSize: 22, fontWeight: "bold", color: "#fff" },
+  scheduleName: { fontSize: 11, color: "#666", marginTop: 2 },
   legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12, marginBottom: 8, paddingHorizontal: 16 },
-  legendItem: { fontSize: 12, fontWeight: "bold" },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: 11, color: "#888" },
   rowBlock: { marginBottom: 8, paddingHorizontal: 8 },
   dayNameRow: { flexDirection: "row", gap: 4, marginBottom: 3 },
-  dayName: { flex: 1, textAlign: "center", fontSize: 10, fontWeight: "bold", color: "#888" },
+  dayName: { flex: 1, textAlign: "center", fontSize: 10, fontWeight: "bold", color: "#555" },
   dayNameWeekend: { color: "#FF3B30" },
   row: { flexDirection: "row", gap: 4 },
   tileWrapper: { flex: 1, alignItems: "center" },
-  tile: { width: "100%", borderRadius: 12, padding: 5, alignItems: "center", minHeight: 90 },
-  todayTile: { borderWidth: 3, borderColor: "#FFD700" },
-  pastTile: { opacity: 0.6 },
+  tile: { width: "100%", borderRadius: 12, padding: 5, alignItems: "center", minHeight: 90, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
+  todayTile: { borderWidth: 2, borderColor: "#FFD700" },
+  pastTile: { opacity: 0.5 },
   dayNum: { color: "#fff", fontWeight: "bold", fontSize: 14 },
   shiftEmoji: { fontSize: 13, marginTop: 2 },
   weatherEmoji: { fontSize: 15, marginTop: 2 },
-  temp: { color: "#fff", fontSize: 8, marginTop: 1, textAlign: "center" },
-  todayDot: { color: "#FFD700", fontSize: 10, marginTop: 2 },
+  temp: { color: "rgba(255,255,255,0.8)", fontSize: 8, marginTop: 1, textAlign: "center" },
+  todayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFD700", marginTop: 2 },
   labelBadge: { borderRadius: 6, paddingHorizontal: 3, paddingVertical: 2, marginTop: 3, width: "100%", alignItems: "center" },
   labelText: { color: "#fff", fontSize: 8, fontWeight: "bold" },
   addLabelBtn: { marginTop: 3, width: "100%", alignItems: "center" },
-  addLabelText: { color: "#bbb", fontSize: 12 },
-  modalOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "85%" },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#2d2d2d", marginBottom: 4, textAlign: "center" },
-  modalSubtitle: { fontSize: 13, color: "#888", textAlign: "center", marginBottom: 12 },
-  customSection: { backgroundColor: "#f9f9f9", borderRadius: 12, padding: 12, marginBottom: 8 },
+  addLabelText: { color: "#333", fontSize: 12 },
+  modalOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.85)", justifyContent: "flex-end" },
+  modalContent: { backgroundColor: "#1a1a1a", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "85%", borderWidth: 1, borderColor: "#333" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 4, textAlign: "center" },
+  modalSubtitle: { fontSize: 13, color: "#666", textAlign: "center", marginBottom: 12 },
+  customSection: { backgroundColor: "#222", borderRadius: 12, padding: 12, marginBottom: 8 },
   customRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  customInput: { flex: 1, borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 10, fontSize: 14, color: "#2d2d2d", backgroundColor: "#fff" },
+  customInput: { flex: 1, borderWidth: 1, borderColor: "#333", borderRadius: 10, padding: 10, fontSize: 14, color: "#fff", backgroundColor: "#111" },
   customSaveBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 10, paddingHorizontal: 16 },
-  customSaveBtnDisabled: { backgroundColor: "#ccc" },
+  customSaveBtnDisabled: { backgroundColor: "#333" },
   customSaveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
-  catTitle: { fontSize: 13, fontWeight: "bold", color: "#555", marginBottom: 8, marginTop: 12 },
+  catTitle: { fontSize: 13, fontWeight: "bold", color: "#888", marginBottom: 8, marginTop: 12 },
   labelGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   labelChip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   labelChipText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-  clearLabelBtn: { padding: 16, alignItems: "center", marginTop: 8 },
-  clearLabelText: { fontSize: 15, color: "#FF3B30", fontWeight: "bold" },
+  clearBtn: { padding: 16, alignItems: "center", marginTop: 8 },
+  clearBtnText: { fontSize: 15, color: "#FF3B30", fontWeight: "bold" },
   cancelBtn: { padding: 16, alignItems: "center" },
-  cancelBtnText: { fontSize: 15, color: "#888" },
+  cancelBtnText: { fontSize: 15, color: "#666" },
 });

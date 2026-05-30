@@ -6,33 +6,36 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>ShiftScore 🏥</Text>
-      <Text style={styles.subtitle}>Welcome back, Amal!</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>ShiftScore</Text>
+        <Text style={styles.subtitle}>Welcome back, Amal 👋</Text>
+      </View>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push("/calendar")}>
-        <Text style={styles.cardIcon}>🗓️</Text>
-        <Text style={styles.cardTitle}>My Calendar</Text>
-        <Text style={styles.cardSub}>View your shift schedule</Text>
-      </TouchableOpacity>
+      <View style={styles.grid}>
+        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/calendar")}>
+          <Text style={styles.cardIcon}>🗓️</Text>
+          <Text style={styles.cardTitle}>My Calendar</Text>
+          <Text style={styles.cardSub}>View your shift schedule</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push("/health")}>
-        <Text style={styles.cardIcon}>❤️</Text>
-        <Text style={styles.cardTitle}>Health</Text>
-        <Text style={styles.cardSub}>Track your wellness</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/health")}>
+          <Text style={styles.cardIcon}>❤️</Text>
+          <Text style={styles.cardTitle}>Health</Text>
+          <Text style={styles.cardSub}>Track your wellness</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push("/stats")}>
-        <Text style={styles.cardIcon}>📊</Text>
-        <Text style={styles.cardTitle}>Shift Score</Text>
-        <Text style={styles.cardSub}>View your stress stats</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/stats")}>
+          <Text style={styles.cardIcon}>📊</Text>
+          <Text style={styles.cardTitle}>Shift Score</Text>
+          <Text style={styles.cardSub}>Your daily performance</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push("/settings")}>
-        <Text style={styles.cardIcon}>⚙️</Text>
-        <Text style={styles.cardTitle}>Settings</Text>
-        <Text style={styles.cardSub}>Customize your schedule</Text>
-      </TouchableOpacity>
-
+        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/settings")}>
+          <Text style={styles.cardIcon}>⚙️</Text>
+          <Text style={styles.cardTitle}>Settings</Text>
+          <Text style={styles.cardSub}>Customize your schedule</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -40,45 +43,49 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    paddingTop: 80,
+    backgroundColor: "#111",
     paddingHorizontal: 20,
+    paddingTop: 70,
+  },
+  header: {
+    marginBottom: 32,
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "bold",
-    color: "#2d2d2d",
+    color: "#fff",
+    letterSpacing: 1,
   },
   subtitle: {
     fontSize: 16,
     color: "#888",
-    marginTop: 8,
-    marginBottom: 40,
+    marginTop: 6,
+  },
+  grid: {
+    gap: 12,
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#1a1a1a",
     borderRadius: 16,
-    padding: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "#2a2a2a",
+  },
+  cardLarge: {
     width: "100%",
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
   },
   cardIcon: {
-    fontSize: 28,
-    marginBottom: 6,
+    fontSize: 30,
+    marginBottom: 10,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2d2d2d",
+    color: "#fff",
   },
   cardSub: {
     fontSize: 13,
-    color: "#888",
+    color: "#666",
     marginTop: 4,
   },
 });
