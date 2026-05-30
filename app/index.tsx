@@ -27,6 +27,12 @@ export default function Index() {
         <Text style={styles.cardSub}>View your stress stats</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.card} onPress={() => router.push("/settings")}>
+        <Text style={styles.cardIcon}>⚙️</Text>
+        <Text style={styles.cardTitle}>Settings</Text>
+        <Text style={styles.cardSub}>Customize your schedule</Text>
+      </TouchableOpacity>
+
     </View>
   );
 }

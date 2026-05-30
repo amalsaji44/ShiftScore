@@ -1,10 +1,38 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const SHIFT_CYCLE = ["Day", "Day", "Night", "Night", "Off", "Off", "Off", "Off", "Off"];
-const CYCLE_START = new Date(2026, 4, 5);
+type ShiftDay = {
+  id: string;
+  name: string;
+  color: string;
+  emoji: string;
+};
+
+type ShiftSchedule = {
+  cycleName: string;
+  cycleLength: number;
+  startDate: string;
+  shifts: ShiftDay[];
+};
+
+const DEFAULT_SCHEDULE: ShiftSchedule = {
+  cycleName: "My Schedule",
+  cycleLength: 9,
+  startDate: "2026-05-05",
+  shifts: [
+    { id: "1", name: "Day Shift", color: "#4A90E2", emoji: "🌅" },
+    { id: "2", name: "Day Shift", color: "#4A90E2", emoji: "🌅" },
+    { id: "3", name: "Night Shift", color: "#7B68EE", emoji: "🌙" },
+    { id: "4", name: "Night Shift", color: "#7B68EE", emoji: "🌙" },
+    { id: "5", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+    { id: "6", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+    { id: "7", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+    { id: "8", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+    { id: "9", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+  ],
+};
 
 const DAY_LABELS = [
   { label: "🏃 Easy Run", color: "#4CAF50" },
@@ -37,24 +65,6 @@ const DAY_LABELS = [
   { label: "📅 Off Day", color: "#BDBDBD" },
 ];
 
-function getShiftForDate(date: Date) {
-  const diff = Math.floor((date.getTime() - CYCLE_START.getTime()) / (1000 * 60 * 60 * 24));
-  const index = ((diff % 9) + 9) % 9;
-  return SHIFT_CYCLE[index];
-}
-
-function getShiftColor(shift: string) {
-  if (shift === "Day") return "#4A90E2";
-  if (shift === "Night") return "#7B68EE";
-  return "#4CAF50";
-}
-
-function getShiftEmoji(shift: string) {
-  if (shift === "Day") return "🌅";
-  if (shift === "Night") return "🌙";
-  return "✅";
-}
-
 function getWeatherEmoji(code: number, temp: number) {
   if (code === 0) return temp > 25 ? "☀️" : "🌤️";
   if (code <= 2) return "⛅";
@@ -71,6 +81,7 @@ function getWeatherEmoji(code: number, temp: number) {
 export default function Calendar() {
   const router = useRouter();
   const today = new Date();
+  const [schedule, setSchedule] = useState<ShiftSchedule>(DEFAULT_SCHEDULE);
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [weather, setWeather] = useState<{ [key: string]: { emoji: string; tempMax: number; tempMin: number } }>({});
   const [loadingWeather, setLoadingWeather] = useState(false);
@@ -79,10 +90,24 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [customLabel, setCustomLabel] = useState("");
 
+  // Reload schedule every time calendar is opened!!
+  useFocusEffect(
+    useCallback(() => {
+      loadSchedule();
+      loadLabels();
+    }, [])
+  );
+
   useEffect(() => {
     fetchWeather();
-    loadLabels();
   }, [currentMonth]);
+
+  async function loadSchedule() {
+    try {
+      const saved = await AsyncStorage.getItem("shift_schedule");
+      if (saved) setSchedule(JSON.parse(saved));
+    } catch (e) { console.log(e); }
+  }
 
   async function loadLabels() {
     try {
@@ -122,6 +147,13 @@ export default function Calendar() {
     setLoadingWeather(false);
   }
 
+  function getShiftForDate(date: Date) {
+    const cycleStart = new Date(schedule.startDate);
+    const diff = Math.floor((date.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
+    const index = ((diff % schedule.cycleLength) + schedule.cycleLength) % schedule.cycleLength;
+    return schedule.shifts[index] || schedule.shifts[0];
+  }
+
   function getDaysInMonth() {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -138,8 +170,8 @@ export default function Calendar() {
   function getRows() {
     const days = getDaysInMonth();
     const rows = [];
-    for (let i = 0; i < days.length; i += 9) {
-      rows.push(days.slice(i, i + 9));
+    for (let i = 0; i < days.length; i += schedule.cycleLength) {
+      rows.push(days.slice(i, i + schedule.cycleLength));
     }
     return rows;
   }
@@ -176,7 +208,6 @@ export default function Calendar() {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
-      {/* Month Navigation */}
       <View style={styles.monthNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
           <Text style={styles.navBtnText}>‹</Text>
@@ -187,19 +218,20 @@ export default function Calendar() {
         </TouchableOpacity>
       </View>
 
-      {/* Legend */}
+      {/* Schedule name */}
+      <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day cycle</Text>
+
       <View style={styles.legend}>
-        <Text style={[styles.legendItem, { color: "#4A90E2" }]}>🌅 Day</Text>
-        <Text style={[styles.legendItem, { color: "#7B68EE" }]}>🌙 Night</Text>
-        <Text style={[styles.legendItem, { color: "#4CAF50" }]}>✅ Off</Text>
+        {[...new Map(schedule.shifts.map(s => [s.name, s])).values()].map(shift => (
+          <Text key={shift.id} style={[styles.legendItem, { color: shift.color }]}>
+            {shift.emoji} {shift.name}
+          </Text>
+        ))}
         {loadingWeather && <ActivityIndicator size="small" color="#888" />}
       </View>
 
-      {/* Calendar rows */}
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.rowBlock}>
-
-          {/* Day name header */}
           <View style={styles.dayNameRow}>
             {row.map((item, colIndex) => {
               const isWeekend = item.date.getDay() === 0 || item.date.getDay() === 6;
@@ -214,7 +246,6 @@ export default function Calendar() {
             })}
           </View>
 
-          {/* Tiles */}
           <View style={styles.row}>
             {row.map((item, colIndex) => {
               const isToday = item.date.toDateString() === today.toDateString();
@@ -229,13 +260,13 @@ export default function Calendar() {
                   <TouchableOpacity
                     style={[
                       styles.tile,
-                      { backgroundColor: getShiftColor(item.shift) },
+                      { backgroundColor: item.shift.color },
                       isToday && styles.todayTile,
                       isPast && styles.pastTile,
                     ]}
                     onPress={() => router.push({
                       pathname: "/dayview",
-                      params: { date: item.date.toDateString(), shift: item.shift }
+                      params: { date: item.date.toDateString(), shift: item.shift.name }
                     })}
                     onLongPress={() => {
                       setSelectedDate(dateKey);
@@ -243,7 +274,7 @@ export default function Calendar() {
                     }}
                   >
                     <Text style={styles.dayNum}>{item.date.getDate()}</Text>
-                    <Text style={styles.shiftEmoji}>{getShiftEmoji(item.shift)}</Text>
+                    <Text style={styles.shiftEmoji}>{item.shift.emoji}</Text>
                     {weatherData && <Text style={styles.weatherEmoji}>{weatherData.emoji}</Text>}
                     {weatherData && (
                       <Text style={styles.temp}>↑{weatherData.tempMax}° ↓{weatherData.tempMin}°</Text>
@@ -279,14 +310,12 @@ export default function Calendar() {
         </View>
       ))}
 
-      {/* Label Modal */}
       {showLabelModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Set Day Label</Text>
             <Text style={styles.modalSubtitle}>{selectedDate}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
-
               <View style={styles.customSection}>
                 <Text style={styles.catTitle}>✏️ Custom Label</Text>
                 <View style={styles.customRow}>
@@ -300,9 +329,7 @@ export default function Calendar() {
                   />
                   <TouchableOpacity
                     style={[styles.customSaveBtn, !customLabel && styles.customSaveBtnDisabled]}
-                    onPress={() => {
-                      if (customLabel && selectedDate) saveLabel(selectedDate, customLabel);
-                    }}
+                    onPress={() => { if (customLabel && selectedDate) saveLabel(selectedDate, customLabel); }}
                   >
                     <Text style={styles.customSaveBtnText}>Save</Text>
                   </TouchableOpacity>
@@ -352,7 +379,6 @@ export default function Calendar() {
           </View>
         </View>
       )}
-
     </ScrollView>
   );
 }
@@ -361,12 +387,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   backBtn: { padding: 16, paddingTop: 60 },
   backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
-  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 8 },
+  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 4 },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 32, color: "#4A90E2", fontWeight: "bold" },
   monthTitle: { fontSize: 22, fontWeight: "bold", color: "#2d2d2d" },
-  legend: { flexDirection: "row", justifyContent: "center", gap: 16, marginBottom: 8, alignItems: "center" },
-  legendItem: { fontSize: 13, fontWeight: "bold" },
+  scheduleName: { textAlign: "center", fontSize: 13, color: "#888", marginBottom: 8 },
+  legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12, marginBottom: 8, paddingHorizontal: 16 },
+  legendItem: { fontSize: 12, fontWeight: "bold" },
   rowBlock: { marginBottom: 8, paddingHorizontal: 8 },
   dayNameRow: { flexDirection: "row", gap: 4, marginBottom: 3 },
   dayName: { flex: 1, textAlign: "center", fontSize: 10, fontWeight: "bold", color: "#888" },
