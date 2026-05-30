@@ -34,6 +34,21 @@ const DEFAULT_SCHEDULE: ShiftSchedule = {
   ],
 };
 
+const CITY_COORDS: { [key: string]: { lat: number; lng: number; tz: string } } = {
+  "London ON":     { lat: 42.9849, lng: -81.2453, tz: "America%2FToronto" },
+  "Toronto ON":    { lat: 43.6532, lng: -79.3832, tz: "America%2FToronto" },
+  "Ottawa ON":     { lat: 45.4215, lng: -75.6972, tz: "America%2FToronto" },
+  "Vancouver BC":  { lat: 49.2827, lng: -123.1207, tz: "America%2FVancouver" },
+  "Calgary AB":    { lat: 51.0447, lng: -114.0719, tz: "America%2FCalgary" },
+  "Montreal QC":   { lat: 45.5017, lng: -73.5673, tz: "America%2FToronto" },
+  "Edmonton AB":   { lat: 53.5461, lng: -113.4938, tz: "America%2FCalgary" },
+  "Winnipeg MB":   { lat: 49.8951, lng: -97.1384, tz: "America%2FWinnipeg" },
+  "Hamilton ON":   { lat: 43.2557, lng: -79.8711, tz: "America%2FToronto" },
+  "Kitchener ON":  { lat: 43.4516, lng: -80.4925, tz: "America%2FToronto" },
+  "Halifax NS":    { lat: 44.6488, lng: -63.5752, tz: "America%2FHalifax" },
+  "Victoria BC":   { lat: 48.4284, lng: -123.3656, tz: "America%2FVancouver" },
+};
+
 const DAY_LABELS = [
   { label: "🏃 Easy Run", color: "#4CAF50" },
   { label: "⚡ Speed Intervals", color: "#FF9500" },
@@ -82,6 +97,7 @@ export default function Calendar() {
   const router = useRouter();
   const today = new Date();
   const [schedule, setSchedule] = useState<ShiftSchedule>(DEFAULT_SCHEDULE);
+  const [userCity, setUserCity] = useState("London ON");
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [weather, setWeather] = useState<{ [key: string]: { emoji: string; tempMax: number; tempMin: number } }>({});
   const [loadingWeather, setLoadingWeather] = useState(false);
@@ -92,19 +108,21 @@ export default function Calendar() {
 
   useFocusEffect(
     useCallback(() => {
-      loadSchedule();
+      loadScheduleAndCity();
       loadLabels();
     }, [])
   );
 
   useEffect(() => {
     fetchWeather();
-  }, [currentMonth]);
+  }, [currentMonth, userCity]);
 
-  async function loadSchedule() {
+  async function loadScheduleAndCity() {
     try {
       const saved = await AsyncStorage.getItem("shift_schedule");
       if (saved) setSchedule(JSON.parse(saved));
+      const city = await AsyncStorage.getItem("user_city");
+      if (city) setUserCity(city);
     } catch (e) { console.log(e); }
   }
 
@@ -126,12 +144,13 @@ export default function Calendar() {
   async function fetchWeather() {
     setLoadingWeather(true);
     try {
+      const coords = CITY_COORDS[userCity] || CITY_COORDS["London ON"];
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
       const endDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=42.9849&longitude=-81.2453&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=America%2FToronto&start_date=${startDate}&end_date=${endDate}`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=${coords.tz}&start_date=${startDate}&end_date=${endDate}`;
       const res = await fetch(url);
       const data = await res.json();
       const weatherMap: { [key: string]: { emoji: string; tempMax: number; tempMin: number } } = {};
@@ -201,21 +220,19 @@ export default function Calendar() {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
-      {/* Month Nav */}
       <View style={styles.monthNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
           <Text style={styles.navBtnText}>‹</Text>
         </TouchableOpacity>
         <View style={styles.monthInfo}>
           <Text style={styles.monthTitle}>{monthName}</Text>
-          <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day</Text>
+          <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day · 📍{userCity}</Text>
         </View>
         <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
           <Text style={styles.navBtnText}>›</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         {[...new Map(schedule.shifts.map(s => [s.name, s])).values()].map(shift => (
           <View key={shift.id} style={styles.legendItem}>
@@ -226,7 +243,6 @@ export default function Calendar() {
         {loadingWeather && <ActivityIndicator size="small" color="#888" />}
       </View>
 
-      {/* Calendar */}
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.rowBlock}>
           <View style={styles.dayNameRow}>
@@ -293,7 +309,6 @@ export default function Calendar() {
         </View>
       ))}
 
-      {/* Label Modal */}
       {showLabelModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -370,9 +385,9 @@ const styles = StyleSheet.create({
   monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 8 },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 32, color: "#4A90E2", fontWeight: "bold" },
-  monthInfo: { alignItems: "center" },
+  monthInfo: { alignItems: "center", flex: 1 },
   monthTitle: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  scheduleName: { fontSize: 11, color: "#666", marginTop: 2 },
+  scheduleName: { fontSize: 10, color: "#555", marginTop: 2, textAlign: "center" },
   legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12, marginBottom: 8, paddingHorizontal: 16 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },

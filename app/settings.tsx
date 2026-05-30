@@ -137,6 +137,12 @@ const DEFAULT_SCHEDULE: ShiftSchedule = {
   ],
 };
 
+const CITIES = [
+  "London ON", "Toronto ON", "Ottawa ON", "Vancouver BC",
+  "Calgary AB", "Montreal QC", "Edmonton AB", "Winnipeg MB",
+  "Hamilton ON", "Kitchener ON", "Halifax NS", "Victoria BC",
+];
+
 export default function Settings() {
   const router = useRouter();
   const [schedule, setSchedule] = useState<ShiftSchedule>(DEFAULT_SCHEDULE);
@@ -144,24 +150,22 @@ export default function Settings() {
   const [editingShift, setEditingShift] = useState<ShiftDay | null>(null);
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
-  const [userName, setUserName] = useState("Amal");
+  const [userName, setUserName] = useState("");
+  const [userCity, setUserCity] = useState("London ON");
+  const [customCity, setCustomCity] = useState("");
 
   useEffect(() => {
-    loadSchedule();
-    loadUserName();
+    loadAll();
   }, []);
 
-  async function loadSchedule() {
+  async function loadAll() {
     try {
       const saved = await AsyncStorage.getItem("shift_schedule");
       if (saved) setSchedule(JSON.parse(saved));
-    } catch (e) { console.log(e); }
-  }
-
-  async function loadUserName() {
-    try {
       const name = await AsyncStorage.getItem("user_name");
       if (name) setUserName(name);
+      const city = await AsyncStorage.getItem("user_city");
+      if (city) setUserCity(city);
     } catch (e) { console.log(e); }
   }
 
@@ -175,8 +179,14 @@ export default function Settings() {
   }
 
   async function saveUserName(name: string) {
-    await AsyncStorage.setItem("user_name", name);
     setUserName(name);
+    await AsyncStorage.setItem("user_name", name);
+  }
+
+  async function saveUserCity(city: string) {
+    setUserCity(city);
+    await AsyncStorage.setItem("user_city", city);
+    setCustomCity("");
   }
 
   function setCycleLength(length: number) {
@@ -218,9 +228,11 @@ export default function Settings() {
 
       <Text style={styles.title}>⚙️ Settings</Text>
 
-      {/* USER NAME */}
+      {/* PROFILE */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>👤 Your Name</Text>
+        <Text style={styles.sectionTitle}>👤 Profile</Text>
+
+        <Text style={styles.fieldLabel}>Your Name</Text>
         <TextInput
           style={styles.input}
           value={userName}
@@ -228,6 +240,40 @@ export default function Settings() {
           placeholder="Enter your name"
           placeholderTextColor="#444"
         />
+
+        <Text style={styles.fieldLabel}>📍 Your City</Text>
+        <Text style={styles.sectionSub}>Used for accurate weather on your calendar</Text>
+        <View style={styles.cityGrid}>
+          {CITIES.map(city => (
+            <TouchableOpacity
+              key={city}
+              style={[styles.cityChip, userCity === city && styles.cityChipActive]}
+              onPress={() => saveUserCity(city)}
+            >
+              <Text style={[styles.cityChipText, userCity === city && styles.cityChipTextActive]}>
+                {city}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.customCityRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            value={customCity}
+            onChangeText={setCustomCity}
+            placeholder="Other city..."
+            placeholderTextColor="#444"
+          />
+          <TouchableOpacity
+            style={[styles.customCityBtn, !customCity && styles.customCityBtnDisabled]}
+            onPress={() => { if (customCity) saveUserCity(customCity); }}
+          >
+            <Text style={styles.customCityBtnText}>Set</Text>
+          </TouchableOpacity>
+        </View>
+        {userCity && (
+          <Text style={styles.currentCity}>📍 Current: {userCity}</Text>
+        )}
       </View>
 
       {/* PRESETS */}
@@ -300,7 +346,7 @@ export default function Settings() {
             <Text style={styles.shiftEmoji}>{shift.emoji}</Text>
             <View style={styles.shiftInfo}>
               <Text style={styles.shiftName}>{shift.name}</Text>
-              <Text style={styles.shiftDay}>Day {index + 1}</Text>
+              <Text style={styles.shiftDay}>Day {index + 1} of cycle</Text>
             </View>
             <Text style={styles.shiftEdit}>✏️</Text>
           </TouchableOpacity>
@@ -443,6 +489,16 @@ const styles = StyleSheet.create({
   sectionSub: { fontSize: 13, color: "#666", marginBottom: 12 },
   fieldLabel: { fontSize: 13, fontWeight: "bold", color: "#888", marginBottom: 8, marginTop: 8 },
   input: { borderWidth: 1, borderColor: "#333", borderRadius: 10, padding: 12, fontSize: 15, color: "#fff", marginBottom: 8, backgroundColor: "#222" },
+  cityGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  cityChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: "#333", backgroundColor: "#222" },
+  cityChipActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
+  cityChipText: { fontSize: 12, color: "#666" },
+  cityChipTextActive: { color: "#fff", fontWeight: "bold" },
+  customCityRow: { flexDirection: "row", gap: 8, alignItems: "center", marginBottom: 8 },
+  customCityBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 12, paddingHorizontal: 16 },
+  customCityBtnDisabled: { backgroundColor: "#333" },
+  customCityBtnText: { color: "#fff", fontWeight: "bold" },
+  currentCity: { fontSize: 12, color: "#4A90E2", marginTop: 4 },
   presetBtn: { backgroundColor: "#4A90E2", borderRadius: 12, padding: 14, alignItems: "center" },
   presetBtnText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
   cycleRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 12 },

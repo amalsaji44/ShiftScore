@@ -1,36 +1,55 @@
-import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
+  const [userName, setUserName] = useState("there");
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUserName();
+    }, [])
+  );
+
+  async function loadUserName() {
+    try {
+      const name = await AsyncStorage.getItem("user_name");
+      if (name) setUserName(name);
+    } catch (e) { console.log(e); }
+  }
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>ShiftScore</Text>
-        <Text style={styles.subtitle}>Welcome back, Amal 👋</Text>
+        <Text style={styles.subtitle}>{greeting}, {userName} 👋</Text>
       </View>
 
       <View style={styles.grid}>
-        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/calendar")}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push("/calendar")}>
           <Text style={styles.cardIcon}>🗓️</Text>
           <Text style={styles.cardTitle}>My Calendar</Text>
           <Text style={styles.cardSub}>View your shift schedule</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/health")}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push("/health")}>
           <Text style={styles.cardIcon}>❤️</Text>
           <Text style={styles.cardTitle}>Health</Text>
           <Text style={styles.cardSub}>Track your wellness</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/stats")}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push("/stats")}>
           <Text style={styles.cardIcon}>📊</Text>
           <Text style={styles.cardTitle}>Shift Score</Text>
           <Text style={styles.cardSub}>Your daily performance</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.card, styles.cardLarge]} onPress={() => router.push("/settings")}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push("/settings")}>
           <Text style={styles.cardIcon}>⚙️</Text>
           <Text style={styles.cardTitle}>Settings</Text>
           <Text style={styles.cardSub}>Customize your schedule</Text>
@@ -70,9 +89,6 @@ const styles = StyleSheet.create({
     padding: 22,
     borderWidth: 1,
     borderColor: "#2a2a2a",
-  },
-  cardLarge: {
-    width: "100%",
   },
   cardIcon: {
     fontSize: 30,
