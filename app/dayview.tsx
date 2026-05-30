@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -33,6 +34,28 @@ type Workout = {
   notes: string;
 };
 
+type FoodEntry = {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  portion: string;
+  mealType: string;
+};
+
+type FoodDBItem = {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  portion: string;
+  category: string;
+  custom?: boolean;
+};
+
 const WORKOUT_TYPES = [
   { name: "Walking", emoji: "🚶" },
   { name: "Running", emoji: "🏃" },
@@ -46,6 +69,145 @@ const WORKOUT_TYPES = [
 ];
 
 const INTENSITIES = ["Easy", "Moderate", "Hard", "Max"];
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
+const FOOD_DATABASE: FoodDBItem[] = [
+  { name: "Apple", calories: 95, protein: 0, carbs: 25, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Orange", calories: 62, protein: 1, carbs: 15, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Grapes", calories: 104, protein: 1, carbs: 27, fat: 0, portion: "1 cup", category: "Fruits" },
+  { name: "Strawberries", calories: 49, protein: 1, carbs: 12, fat: 0, portion: "1 cup", category: "Fruits" },
+  { name: "Blueberries", calories: 84, protein: 1, carbs: 21, fat: 0, portion: "1 cup", category: "Fruits" },
+  { name: "Mango", calories: 201, protein: 3, carbs: 50, fat: 1, portion: "1 whole", category: "Fruits" },
+  { name: "Watermelon", calories: 86, protein: 2, carbs: 22, fat: 0, portion: "2 cups", category: "Fruits" },
+  { name: "Pineapple", calories: 82, protein: 1, carbs: 22, fat: 0, portion: "1 cup", category: "Fruits" },
+  { name: "Avocado", calories: 234, protein: 3, carbs: 12, fat: 21, portion: "1 whole", category: "Fruits" },
+  { name: "Peach", calories: 59, protein: 1, carbs: 14, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Pear", calories: 101, protein: 1, carbs: 27, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Kiwi", calories: 42, protein: 1, carbs: 10, fat: 0, portion: "1 medium", category: "Fruits" },
+  { name: "Dates", calories: 277, protein: 2, carbs: 75, fat: 0, portion: "100g", category: "Fruits" },
+  { name: "Broccoli", calories: 55, protein: 4, carbs: 11, fat: 1, portion: "1 cup", category: "Vegetables" },
+  { name: "Spinach", calories: 7, protein: 1, carbs: 1, fat: 0, portion: "1 cup raw", category: "Vegetables" },
+  { name: "Carrots", calories: 52, protein: 1, carbs: 12, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Tomato", calories: 22, protein: 1, carbs: 5, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Cucumber", calories: 16, protein: 1, carbs: 4, fat: 0, portion: "1 cup", category: "Vegetables" },
+  { name: "Bell pepper", calories: 31, protein: 1, carbs: 7, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Onion", calories: 44, protein: 1, carbs: 10, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Potato", calories: 161, protein: 4, carbs: 37, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Sweet potato", calories: 103, protein: 2, carbs: 24, fat: 0, portion: "1 medium", category: "Vegetables" },
+  { name: "Mushrooms", calories: 15, protein: 2, carbs: 2, fat: 0, portion: "1 cup", category: "Vegetables" },
+  { name: "Kale", calories: 33, protein: 3, carbs: 6, fat: 1, portion: "1 cup", category: "Vegetables" },
+  { name: "Olive oil", calories: 119, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
+  { name: "Coconut oil", calories: 121, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
+  { name: "Vegetable oil", calories: 120, protein: 0, carbs: 0, fat: 14, portion: "1 tbsp", category: "Oils" },
+  { name: "Butter", calories: 102, protein: 0, carbs: 0, fat: 12, portion: "1 tbsp", category: "Oils" },
+  { name: "Ghee", calories: 112, protein: 0, carbs: 0, fat: 13, portion: "1 tbsp", category: "Oils" },
+  { name: "Peanut butter", calories: 190, protein: 8, carbs: 6, fat: 16, portion: "2 tbsp", category: "Oils" },
+  { name: "Chicken breast grilled", calories: 165, protein: 31, carbs: 0, fat: 4, portion: "100g", category: "Proteins" },
+  { name: "Chicken thigh grilled", calories: 209, protein: 26, carbs: 0, fat: 11, portion: "100g", category: "Proteins" },
+  { name: "Salmon grilled", calories: 208, protein: 28, carbs: 0, fat: 10, portion: "100g", category: "Proteins" },
+  { name: "Tuna canned", calories: 132, protein: 29, carbs: 0, fat: 1, portion: "100g", category: "Proteins" },
+  { name: "Beef ground cooked", calories: 250, protein: 26, carbs: 0, fat: 16, portion: "100g", category: "Proteins" },
+  { name: "Steak grilled", calories: 271, protein: 26, carbs: 0, fat: 18, portion: "100g", category: "Proteins" },
+  { name: "Eggs 2 scrambled", calories: 180, protein: 12, carbs: 2, fat: 14, portion: "2 eggs", category: "Proteins" },
+  { name: "Eggs boiled", calories: 155, protein: 13, carbs: 1, fat: 11, portion: "2 eggs", category: "Proteins" },
+  { name: "Tofu firm", calories: 144, protein: 17, carbs: 3, fat: 9, portion: "100g", category: "Proteins" },
+  { name: "Lentils cooked", calories: 230, protein: 18, carbs: 40, fat: 1, portion: "1 cup", category: "Proteins" },
+  { name: "Chickpeas cooked", calories: 269, protein: 15, carbs: 45, fat: 4, portion: "1 cup", category: "Proteins" },
+  { name: "Protein shake whey", calories: 200, protein: 30, carbs: 10, fat: 5, portion: "1 scoop", category: "Proteins" },
+  { name: "White rice cooked", calories: 206, protein: 4, carbs: 45, fat: 0, portion: "1 cup", category: "Grains" },
+  { name: "Brown rice cooked", calories: 216, protein: 5, carbs: 45, fat: 2, portion: "1 cup", category: "Grains" },
+  { name: "Pasta cooked", calories: 220, protein: 8, carbs: 43, fat: 1, portion: "1 cup", category: "Grains" },
+  { name: "White bread", calories: 79, protein: 3, carbs: 15, fat: 1, portion: "1 slice", category: "Grains" },
+  { name: "Whole wheat bread", calories: 69, protein: 4, carbs: 12, fat: 1, portion: "1 slice", category: "Grains" },
+  { name: "Bagel plain", calories: 270, protein: 11, carbs: 53, fat: 2, portion: "1 bagel", category: "Grains" },
+  { name: "Oatmeal cooked", calories: 150, protein: 5, carbs: 27, fat: 3, portion: "1 cup", category: "Grains" },
+  { name: "Roti whole wheat", calories: 120, protein: 3, carbs: 18, fat: 4, portion: "1 roti", category: "Grains" },
+  { name: "Naan bread", calories: 262, protein: 9, carbs: 45, fat: 5, portion: "1 piece", category: "Grains" },
+  { name: "Whole milk", calories: 149, protein: 8, carbs: 12, fat: 8, portion: "1 cup", category: "Dairy" },
+  { name: "Greek yogurt plain", calories: 130, protein: 17, carbs: 9, fat: 0, portion: "1 cup", category: "Dairy" },
+  { name: "Cheddar cheese", calories: 113, protein: 7, carbs: 0, fat: 9, portion: "30g", category: "Dairy" },
+  { name: "Cottage cheese", calories: 206, protein: 28, carbs: 8, fat: 9, portion: "1 cup", category: "Dairy" },
+  { name: "Water", calories: 0, protein: 0, carbs: 0, fat: 0, portion: "1 glass", category: "Drinks" },
+  { name: "Coffee black", calories: 5, protein: 0, carbs: 0, fat: 0, portion: "1 cup", category: "Drinks" },
+  { name: "Coffee with milk sugar", calories: 80, protein: 1, carbs: 14, fat: 2, portion: "1 cup", category: "Drinks" },
+  { name: "Green tea", calories: 2, protein: 0, carbs: 0, fat: 0, portion: "1 cup", category: "Drinks" },
+  { name: "Orange juice", calories: 112, protein: 2, carbs: 26, fat: 0, portion: "1 cup", category: "Drinks" },
+  { name: "Coca Cola", calories: 140, protein: 0, carbs: 39, fat: 0, portion: "355ml can", category: "Drinks" },
+  { name: "Diet Coke", calories: 0, protein: 0, carbs: 0, fat: 0, portion: "355ml can", category: "Drinks" },
+  { name: "Energy drink Red Bull", calories: 110, protein: 1, carbs: 28, fat: 0, portion: "250ml can", category: "Drinks" },
+  { name: "Gatorade", calories: 140, protein: 0, carbs: 36, fat: 0, portion: "591ml bottle", category: "Drinks" },
+  { name: "Tim Hortons Double Double", calories: 170, protein: 4, carbs: 28, fat: 5, portion: "1 medium", category: "Tim Hortons" },
+  { name: "Tim Hortons Black Coffee", calories: 5, protein: 0, carbs: 1, fat: 0, portion: "1 medium", category: "Tim Hortons" },
+  { name: "Tim Hortons Bagel plain", calories: 280, protein: 10, carbs: 55, fat: 2, portion: "1 bagel", category: "Tim Hortons" },
+  { name: "Tim Hortons Bagel with cream cheese", calories: 430, protein: 14, carbs: 58, fat: 16, portion: "1 bagel", category: "Tim Hortons" },
+  { name: "Tim Hortons Muffin blueberry", calories: 390, protein: 5, carbs: 64, fat: 14, portion: "1 muffin", category: "Tim Hortons" },
+  { name: "Tim Hortons Timbits glazed", calories: 60, protein: 1, carbs: 9, fat: 2, portion: "1 piece", category: "Tim Hortons" },
+  { name: "Tim Hortons Donut", calories: 260, protein: 3, carbs: 36, fat: 12, portion: "1 donut", category: "Tim Hortons" },
+  { name: "Tim Hortons Chicken wrap", calories: 510, protein: 30, carbs: 55, fat: 19, portion: "1 wrap", category: "Tim Hortons" },
+  { name: "Tim Hortons Chili", calories: 300, protein: 22, carbs: 40, fat: 6, portion: "1 medium", category: "Tim Hortons" },
+  { name: "Tim Hortons Iced Capp", calories: 460, protein: 6, carbs: 63, fat: 22, portion: "1 medium", category: "Tim Hortons" },
+  { name: "Tim Hortons French Vanilla", calories: 240, protein: 4, carbs: 42, fat: 7, portion: "1 medium", category: "Tim Hortons" },
+  { name: "McDonalds Big Mac", calories: 550, protein: 25, carbs: 46, fat: 30, portion: "1 burger", category: "McDonalds" },
+  { name: "McDonalds Quarter Pounder", calories: 520, protein: 30, carbs: 42, fat: 26, portion: "1 burger", category: "McDonalds" },
+  { name: "McDonalds McChicken", calories: 400, protein: 20, carbs: 42, fat: 17, portion: "1 burger", category: "McDonalds" },
+  { name: "McDonalds French Fries medium", calories: 320, protein: 4, carbs: 44, fat: 15, portion: "1 medium", category: "McDonalds" },
+  { name: "McDonalds McNuggets 6pc", calories: 280, protein: 14, carbs: 18, fat: 17, portion: "6 pieces", category: "McDonalds" },
+  { name: "McDonalds Egg McMuffin", calories: 300, protein: 18, carbs: 30, fat: 12, portion: "1 sandwich", category: "McDonalds" },
+  { name: "McDonalds Big Breakfast", calories: 760, protein: 28, carbs: 67, fat: 44, portion: "1 meal", category: "McDonalds" },
+  { name: "Subway 6 inch Turkey", calories: 280, protein: 18, carbs: 46, fat: 4, portion: "6 inch", category: "Subway" },
+  { name: "Subway 6 inch Chicken", calories: 310, protein: 23, carbs: 47, fat: 5, portion: "6 inch", category: "Subway" },
+  { name: "Subway 6 inch Tuna", calories: 480, protein: 22, carbs: 45, fat: 24, portion: "6 inch", category: "Subway" },
+  { name: "Subway Footlong Turkey", calories: 560, protein: 36, carbs: 92, fat: 8, portion: "12 inch", category: "Subway" },
+  { name: "Subway Footlong Chicken", calories: 620, protein: 46, carbs: 94, fat: 10, portion: "12 inch", category: "Subway" },
+  { name: "KFC Original chicken piece", calories: 320, protein: 28, carbs: 10, fat: 19, portion: "1 piece", category: "KFC" },
+  { name: "KFC Chicken sandwich", calories: 490, protein: 28, carbs: 51, fat: 20, portion: "1 sandwich", category: "KFC" },
+  { name: "KFC Poutine", calories: 500, protein: 12, carbs: 60, fat: 25, portion: "1 small", category: "KFC" },
+  { name: "Burger King Whopper", calories: 660, protein: 28, carbs: 49, fat: 40, portion: "1 burger", category: "Burger King" },
+  { name: "Harveys Original Burger", calories: 470, protein: 25, carbs: 44, fat: 21, portion: "1 burger", category: "Harveys" },
+  { name: "Harveys Poutine", calories: 620, protein: 18, carbs: 72, fat: 30, portion: "1 regular", category: "Harveys" },
+  { name: "Swiss Chalet Quarter Chicken", calories: 360, protein: 42, carbs: 1, fat: 20, portion: "1 quarter", category: "Swiss Chalet" },
+  { name: "Swiss Chalet Fries", calories: 380, protein: 5, carbs: 55, fat: 16, portion: "1 regular", category: "Swiss Chalet" },
+  { name: "A&W Teen Burger", calories: 500, protein: 26, carbs: 45, fat: 24, portion: "1 burger", category: "A&W" },
+  { name: "A&W Mama Burger", calories: 390, protein: 19, carbs: 40, fat: 17, portion: "1 burger", category: "A&W" },
+  { name: "Pizza Pizza slice cheese", calories: 290, protein: 12, carbs: 38, fat: 10, portion: "1 slice", category: "Pizza Pizza" },
+  { name: "Pizza Pizza slice pepperoni", calories: 330, protein: 14, carbs: 38, fat: 14, portion: "1 slice", category: "Pizza Pizza" },
+  { name: "Popeyes Chicken sandwich", calories: 700, protein: 35, carbs: 60, fat: 42, portion: "1 sandwich", category: "Popeyes" },
+  { name: "Popeyes Chicken piece spicy", calories: 360, protein: 22, carbs: 18, fat: 22, portion: "1 piece", category: "Popeyes" },
+  { name: "Chicken biryani", calories: 520, protein: 28, carbs: 65, fat: 15, portion: "1 plate", category: "South Asian" },
+  { name: "Dal tadka", calories: 180, protein: 10, carbs: 25, fat: 5, portion: "1 cup", category: "South Asian" },
+  { name: "Butter chicken", calories: 380, protein: 28, carbs: 15, fat: 22, portion: "1 cup", category: "South Asian" },
+  { name: "Chicken tikka masala", calories: 350, protein: 30, carbs: 12, fat: 20, portion: "1 cup", category: "South Asian" },
+  { name: "Samosa", calories: 150, protein: 3, carbs: 18, fat: 8, portion: "1 piece", category: "South Asian" },
+  { name: "Mango lassi", calories: 290, protein: 7, carbs: 48, fat: 8, portion: "1 glass", category: "South Asian" },
+  { name: "Chana masala", calories: 270, protein: 14, carbs: 40, fat: 8, portion: "1 cup", category: "South Asian" },
+  { name: "Shawarma chicken wrap", calories: 550, protein: 35, carbs: 55, fat: 20, portion: "1 wrap", category: "Middle Eastern" },
+  { name: "Falafel wrap", calories: 480, protein: 18, carbs: 60, fat: 18, portion: "1 wrap", category: "Middle Eastern" },
+  { name: "Hummus", calories: 166, protein: 8, carbs: 18, fat: 8, portion: "100g", category: "Middle Eastern" },
+  { name: "Kebab plate", calories: 580, protein: 40, carbs: 50, fat: 22, portion: "1 plate", category: "Middle Eastern" },
+  { name: "Fried rice chicken", calories: 430, protein: 18, carbs: 58, fat: 14, portion: "1 cup", category: "Chinese" },
+  { name: "Chow mein", calories: 380, protein: 16, carbs: 52, fat: 12, portion: "1 cup", category: "Chinese" },
+  { name: "Sweet and sour chicken", calories: 400, protein: 22, carbs: 48, fat: 12, portion: "1 cup", category: "Chinese" },
+  { name: "Thai chicken curry", calories: 380, protein: 28, carbs: 18, fat: 22, portion: "1 cup", category: "Thai" },
+  { name: "Pad Thai chicken", calories: 450, protein: 25, carbs: 55, fat: 14, portion: "1 plate", category: "Thai" },
+  { name: "Tom yum soup", calories: 100, protein: 8, carbs: 8, fat: 4, portion: "1 bowl", category: "Thai" },
+  { name: "Spaghetti bolognese", calories: 530, protein: 28, carbs: 65, fat: 16, portion: "1 plate", category: "Italian" },
+  { name: "Pasta carbonara", calories: 600, protein: 25, carbs: 65, fat: 28, portion: "1 plate", category: "Italian" },
+  { name: "Caesar salad", calories: 180, protein: 8, carbs: 12, fat: 12, portion: "1 bowl", category: "Italian" },
+  { name: "Burrito chicken", calories: 680, protein: 38, carbs: 75, fat: 22, portion: "1 burrito", category: "Mexican" },
+  { name: "Taco chicken", calories: 280, protein: 18, carbs: 25, fat: 12, portion: "2 tacos", category: "Mexican" },
+  { name: "Sushi roll salmon 6pc", calories: 300, protein: 16, carbs: 44, fat: 8, portion: "6 pieces", category: "Japanese" },
+  { name: "Ramen bowl", calories: 550, protein: 28, carbs: 65, fat: 18, portion: "1 bowl", category: "Japanese" },
+  { name: "Lays chips regular", calories: 160, protein: 2, carbs: 15, fat: 10, portion: "28g bag", category: "Snacks" },
+  { name: "Almonds", calories: 164, protein: 6, carbs: 6, fat: 14, portion: "28g", category: "Snacks" },
+  { name: "Protein bar", calories: 220, protein: 20, carbs: 25, fat: 7, portion: "1 bar", category: "Snacks" },
+  { name: "Granola bar", calories: 190, protein: 4, carbs: 30, fat: 6, portion: "1 bar", category: "Snacks" },
+  { name: "Chocolate bar", calories: 235, protein: 3, carbs: 30, fat: 13, portion: "1 bar", category: "Snacks" },
+  { name: "Hospital cafeteria sandwich", calories: 380, protein: 18, carbs: 45, fat: 12, portion: "1 sandwich", category: "Hospital" },
+  { name: "Instant noodles", calories: 380, protein: 8, carbs: 52, fat: 16, portion: "1 pack", category: "Hospital" },
+  { name: "Vending machine chips", calories: 160, protein: 2, carbs: 17, fat: 10, portion: "1 bag", category: "Hospital" },
+  { name: "Energy drink", calories: 110, protein: 0, carbs: 29, fat: 0, portion: "1 can", category: "Hospital" },
+];
 
 export default function DayView() {
   const { date, shift } = useLocalSearchParams();
@@ -53,58 +215,198 @@ export default function DayView() {
 
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
+  const [noteExpanded, setNoteExpanded] = useState(false);
+
+  const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
+  const [foodExpanded, setFoodExpanded] = useState(false);
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState<FoodDBItem[]>([]);
+  const [selectedFood, setSelectedFood] = useState<FoodDBItem | null>(null);
+  const [mealType, setMealType] = useState("Breakfast");
+  const [portion, setPortion] = useState("");
+  const [foodTab, setFoodTab] = useState<"search" | "custom">("search");
+  const [customName, setCustomName] = useState("");
+  const [customCalories, setCustomCalories] = useState("");
+  const [customProtein, setCustomProtein] = useState("");
+  const [customCarbs, setCustomCarbs] = useState("");
+  const [customFat, setCustomFat] = useState("");
+  const [customPortion, setCustomPortion] = useState("");
+  const [customFoods, setCustomFoods] = useState<FoodDBItem[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const recordingRef = useRef<Audio.Recording | null>(null);
+
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [activityExpanded, setActivityExpanded] = useState(false);
+  const [showWorkoutModal, setShowWorkoutModal] = useState(false);
+  const [selectedType, setSelectedType] = useState(WORKOUT_TYPES[0]);
+  const [duration, setDuration] = useState("");
+  const [wCalories, setWCalories] = useState("");
+  const [heartRate, setHeartRate] = useState("");
+  const [intensity, setIntensity] = useState("Moderate");
+  const [workoutNotes, setWorkoutNotes] = useState("");
+  const [customWorkoutType, setCustomWorkoutType] = useState("");
+
+  const [items, setItems] = useState<AlarmReminder[]>([]);
+  const [remindersExpanded, setRemindersExpanded] = useState(false);
   const [label, setLabel] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState<"Reminder" | "Alarm">("Reminder");
   const [repeatUnit, setRepeatUnit] = useState("Once");
   const [repeatValue, setRepeatValue] = useState("");
   const [showRepeat, setShowRepeat] = useState(false);
-  const [items, setItems] = useState<AlarmReminder[]>([]);
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [showWorkoutModal, setShowWorkoutModal] = useState(false);
-  const [selectedType, setSelectedType] = useState(WORKOUT_TYPES[0]);
-  const [duration, setDuration] = useState("");
-  const [calories, setCalories] = useState("");
-  const [heartRate, setHeartRate] = useState("");
-  const [intensity, setIntensity] = useState("Moderate");
-  const [workoutNotes, setWorkoutNotes] = useState("");
-  const [customType, setCustomType] = useState("");
 
   const repeatUnits = ["Once", "Minutes", "Hours", "Days", "Weeks", "Weekdays", "Shift Days"];
 
-  useEffect(() => {
-    loadNote();
-    loadItems();
-    loadWorkouts();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
-  async function loadNote() {
+  async function loadAll() {
     try {
-      const saved = await AsyncStorage.getItem(`note_${date}`);
-      if (saved) setNote(saved);
-    } catch (e) { console.log(e); }
-  }
-
-  async function loadItems() {
-    try {
-      const saved = await AsyncStorage.getItem(`items_${date}`);
-      if (saved) setItems(JSON.parse(saved));
-    } catch (e) { console.log(e); }
-  }
-
-  async function loadWorkouts() {
-    try {
-      const saved = await AsyncStorage.getItem(`workouts_${date}`);
-      if (saved) setWorkouts(JSON.parse(saved));
+      const n = await AsyncStorage.getItem(`note_${date}`);
+      if (n) setNote(n);
+      const f = await AsyncStorage.getItem(`food_${date}`);
+      if (f) setFoodEntries(JSON.parse(f));
+      const w = await AsyncStorage.getItem(`workouts_${date}`);
+      if (w) setWorkouts(JSON.parse(w));
+      const i = await AsyncStorage.getItem(`items_${date}`);
+      if (i) setItems(JSON.parse(i));
+      const cf = await AsyncStorage.getItem("custom_foods");
+      if (cf) setCustomFoods(JSON.parse(cf));
     } catch (e) { console.log(e); }
   }
 
   async function handleSaveNote() {
+    await AsyncStorage.setItem(`note_${date}`, note);
+    setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 2000);
+  }
+
+  function handleFoodSearch(text: string) {
+    setSearchText(text);
+    setSelectedFood(null);
+    if (text.length < 2) { setSearchResults([]); return; }
+    const custom = customFoods.filter(f => f.name.toLowerCase().includes(text.toLowerCase()));
+    const builtin = FOOD_DATABASE.filter(f =>
+      f.name.toLowerCase().includes(text.toLowerCase()) ||
+      f.category.toLowerCase().includes(text.toLowerCase())
+    );
+    setSearchResults([...custom, ...builtin].slice(0, 10));
+  }
+
+  function selectFood(food: FoodDBItem) {
+    setSelectedFood(food);
+    setPortion(food.portion);
+    setSearchResults([]);
+    setSearchText(food.name);
+  }
+
+  async function startRecording() {
     try {
-      await AsyncStorage.setItem(`note_${date}`, note);
-      setNoteSaved(true);
-      setTimeout(() => setNoteSaved(false), 2000);
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== "granted") return;
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      recordingRef.current = recording;
+      setIsRecording(true);
     } catch (e) { console.log(e); }
+  }
+
+  async function stopRecording() {
+    setIsRecording(false);
+    await recordingRef.current?.stopAndUnloadAsync();
+  }
+
+  async function saveCustomFood() {
+    if (!customName || !customCalories) { Alert.alert("Please enter name and calories!"); return; }
+    const newCustom: FoodDBItem = {
+      name: customName,
+      calories: parseInt(customCalories) || 0,
+      protein: parseInt(customProtein) || 0,
+      carbs: parseInt(customCarbs) || 0,
+      fat: parseInt(customFat) || 0,
+      portion: customPortion || "1 serving",
+      category: "⭐ My Foods",
+      custom: true,
+    };
+    const updatedCustom = [...customFoods, newCustom];
+    setCustomFoods(updatedCustom);
+    await AsyncStorage.setItem("custom_foods", JSON.stringify(updatedCustom));
+    const entry: FoodEntry = {
+      id: Date.now().toString(),
+      name: newCustom.name,
+      calories: newCustom.calories,
+      protein: newCustom.protein,
+      carbs: newCustom.carbs,
+      fat: newCustom.fat,
+      portion: newCustom.portion,
+      mealType,
+    };
+    const updated = [...foodEntries, entry];
+    setFoodEntries(updated);
+    await AsyncStorage.setItem(`food_${date}`, JSON.stringify(updated));
+    Alert.alert("✅ Saved to your personal database!");
+    resetFoodModal();
+  }
+
+  async function addFoodEntry() {
+    if (!selectedFood) return;
+    const entry: FoodEntry = {
+      id: Date.now().toString(),
+      name: selectedFood.name,
+      calories: selectedFood.calories,
+      protein: selectedFood.protein,
+      carbs: selectedFood.carbs,
+      fat: selectedFood.fat,
+      portion: portion || selectedFood.portion,
+      mealType,
+    };
+    const updated = [...foodEntries, entry];
+    setFoodEntries(updated);
+    await AsyncStorage.setItem(`food_${date}`, JSON.stringify(updated));
+    resetFoodModal();
+  }
+
+  async function deleteFoodEntry(id: string) {
+    const updated = foodEntries.filter(e => e.id !== id);
+    setFoodEntries(updated);
+    await AsyncStorage.setItem(`food_${date}`, JSON.stringify(updated));
+  }
+
+  function resetFoodModal() {
+    setShowFoodModal(false);
+    setSelectedFood(null);
+    setSearchText(""); setSearchResults([]); setPortion("");
+    setFoodTab("search");
+    setCustomName(""); setCustomCalories(""); setCustomProtein("");
+    setCustomCarbs(""); setCustomFat(""); setCustomPortion("");
+  }
+
+  async function saveWorkout() {
+    if (!duration) { Alert.alert("Please enter duration!"); return; }
+    const newWorkout: Workout = {
+      id: Date.now().toString(),
+      type: selectedType.name === "Custom" ? customWorkoutType || "Custom" : selectedType.name,
+      emoji: selectedType.emoji,
+      duration, calories: wCalories, heartRate, intensity,
+      notes: workoutNotes,
+    };
+    const updated = [...workouts, newWorkout];
+    setWorkouts(updated);
+    await AsyncStorage.setItem(`workouts_${date}`, JSON.stringify(updated));
+    setShowWorkoutModal(false);
+    resetWorkoutForm();
+  }
+
+  async function deleteWorkout(id: string) {
+    const updated = workouts.filter(w => w.id !== id);
+    setWorkouts(updated);
+    await AsyncStorage.setItem(`workouts_${date}`, JSON.stringify(updated));
+  }
+
+  function resetWorkoutForm() {
+    setDuration(""); setWCalories(""); setHeartRate("");
+    setWorkoutNotes(""); setCustomWorkoutType(""); setIntensity("Moderate");
+    setSelectedType(WORKOUT_TYPES[0]);
   }
 
   async function handleAddItem() {
@@ -112,7 +414,7 @@ export default function DayView() {
     const parts = time.split(":");
     const hours = parseInt(parts[0]);
     const minutes = parseInt(parts[1]);
-    if (isNaN(hours) || isNaN(minutes)) { Alert.alert("Please enter a valid time (e.g. 0630)"); return; }
+    if (isNaN(hours) || isNaN(minutes)) { Alert.alert("Please enter valid time (e.g. 0630)"); return; }
     const triggerDate = new Date(date as string);
     triggerDate.setHours(hours, minutes, 0, 0);
     if (triggerDate < new Date()) { Alert.alert("That time has already passed!"); return; }
@@ -126,19 +428,11 @@ export default function DayView() {
     else if (repeatUnit === "Shift Days") repeatInterval = 60 * 60 * 24 * 9;
 
     await Notifications.scheduleNotificationAsync({
-      content: {
-        title: type === "Alarm" ? "⏰ ShiftScore Alarm" : "🔔 ShiftScore Reminder",
-        body: label,
-        sound: true,
-      },
+      content: { title: type === "Alarm" ? "⏰ ShiftScore Alarm" : "🔔 ShiftScore Reminder", body: label, sound: true },
       trigger: repeatInterval ? { seconds: repeatInterval, repeats: true } : triggerDate,
     });
 
-    const newItem: AlarmReminder = {
-      id: Date.now().toString(),
-      type, label, time, repeatUnit, repeatValue,
-    };
-
+    const newItem: AlarmReminder = { id: Date.now().toString(), type, label, time, repeatUnit, repeatValue };
     const updated = [...items, newItem];
     setItems(updated);
     await AsyncStorage.setItem(`items_${date}`, JSON.stringify(updated));
@@ -147,55 +441,27 @@ export default function DayView() {
   }
 
   async function handleDeleteItem(id: string) {
-    const updated = items.filter((i) => i.id !== id);
+    const updated = items.filter(i => i.id !== id);
     setItems(updated);
     await AsyncStorage.setItem(`items_${date}`, JSON.stringify(updated));
   }
 
-  async function saveWorkout() {
-    if (!duration) { Alert.alert("Please enter duration!"); return; }
-    const newWorkout: Workout = {
-      id: Date.now().toString(),
-      type: selectedType.name === "Custom" ? customType || "Custom" : selectedType.name,
-      emoji: selectedType.emoji,
-      duration, calories, heartRate, intensity,
-      notes: workoutNotes,
-    };
-    const updated = [...workouts, newWorkout];
-    setWorkouts(updated);
-    await AsyncStorage.setItem(`workouts_${date}`, JSON.stringify(updated));
-    setShowWorkoutModal(false);
-    resetWorkoutForm();
-  }
-
-  async function deleteWorkout(id: string) {
-    const updated = workouts.filter((w) => w.id !== id);
-    setWorkouts(updated);
-    await AsyncStorage.setItem(`workouts_${date}`, JSON.stringify(updated));
-  }
-
-  function resetWorkoutForm() {
-    setDuration(""); setCalories(""); setHeartRate("");
-    setWorkoutNotes(""); setCustomType(""); setIntensity("Moderate");
-    setSelectedType(WORKOUT_TYPES[0]);
-  }
-
-  function getShiftColor(shift: string) {
-    if (shift === "Day") return "#4A90E2";
-    if (shift === "Night") return "#7B68EE";
+  function getShiftColor(s: string) {
+    if (s === "Day") return "#4A90E2";
+    if (s === "Night") return "#7B68EE";
     return "#4CAF50";
   }
 
-  function getShiftEmoji(shift: string) {
-    if (shift === "Day") return "🌅";
-    if (shift === "Night") return "🌙";
+  function getShiftEmoji(s: string) {
+    if (s === "Day") return "🌅";
+    if (s === "Night") return "🌙";
     return "✅";
   }
 
-  function getIntensityColor(intensity: string) {
-    if (intensity === "Easy") return "#4CAF50";
-    if (intensity === "Moderate") return "#4A90E2";
-    if (intensity === "Hard") return "#FF9500";
+  function getIntensityColor(i: string) {
+    if (i === "Easy") return "#4CAF50";
+    if (i === "Moderate") return "#4A90E2";
+    if (i === "Hard") return "#FF9500";
     return "#FF3B30";
   }
 
@@ -205,8 +471,28 @@ export default function DayView() {
     return `Every ${item.repeatUnit}`;
   }
 
-  const totalCalories = workouts.reduce((sum, w) => sum + (parseInt(w.calories) || 0), 0);
-  const totalMinutes = workouts.reduce((sum, w) => sum + (parseInt(w.duration) || 0), 0);
+  const totalFoodCal = foodEntries.reduce((sum, e) => sum + e.calories, 0);
+  const totalFoodProtein = foodEntries.reduce((sum, e) => sum + e.protein, 0);
+  const totalFoodCarbs = foodEntries.reduce((sum, e) => sum + e.carbs, 0);
+  const totalFoodFat = foodEntries.reduce((sum, e) => sum + e.fat, 0);
+  const totalBurnedCal = workouts.reduce((sum, w) => sum + (parseInt(w.calories) || 0), 0);
+  const totalWorkoutMin = workouts.reduce((sum, w) => sum + (parseInt(w.duration) || 0), 0);
+  const netCalories = totalFoodCal - totalBurnedCal;
+
+  function getNetStatus() {
+    if (totalFoodCal === 0 && totalBurnedCal === 0) return null;
+    if (netCalories < -100) return { label: "Deficit 🟢", color: "#4CAF50", desc: "You're burning more than you eat" };
+    if (netCalories > 100) return { label: "Surplus 🔴", color: "#FF3B30", desc: "You're eating more than you burn" };
+    return { label: "Balanced 🟡", color: "#FF9500", desc: "Calories in ≈ calories out" };
+  }
+
+  const netStatus = getNetStatus();
+
+  function getMealEntries(meal: string) {
+    return foodEntries.filter(e => e.mealType === meal);
+  }
+
+  const notePreview = note.length > 60 ? note.substring(0, 60) + "..." : note;
 
   return (
     <ScrollView style={styles.container}>
@@ -220,285 +506,468 @@ export default function DayView() {
         <Text style={styles.headerShift}>{shift} Shift</Text>
       </View>
 
-      {/* NOTES */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📝 Notes</Text>
-        <TextInput
-          style={styles.noteInput}
-          placeholder="Write your notes for this day..."
-          multiline
-          value={note}
-          onChangeText={setNote}
-          placeholderTextColor="#aaa"
-        />
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNote}>
-          <Text style={styles.saveBtnText}>{noteSaved ? "✅ Saved!" : "Save Note"}</Text>
-        </TouchableOpacity>
-      </View>
+      {/* NET CALORIE SUMMARY */}
+      {netStatus && (
+        <View style={[styles.netCard, { borderLeftColor: netStatus.color }]}>
+          <Text style={styles.netTitle}>Net Calories</Text>
+          <Text style={[styles.netValue, { color: netStatus.color }]}>{netCalories > 0 ? "+" : ""}{netCalories} cal</Text>
+          <Text style={styles.netLabel}>{netStatus.label}</Text>
+          <Text style={styles.netDesc}>{netStatus.desc}</Text>
+          <View style={styles.netRow}>
+            <Text style={styles.netItem}>🍎 {totalFoodCal} consumed</Text>
+            <Text style={styles.netItem}>🔥 {totalBurnedCal} burned</Text>
+          </View>
+        </View>
+      )}
 
-      {/* REMINDERS & ALARMS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Reminders & Alarms</Text>
-        <View style={styles.toggleRow}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, type === "Reminder" && styles.toggleActive]}
-            onPress={() => setType("Reminder")}
-          >
-            <Text style={[styles.toggleText, type === "Reminder" && styles.toggleTextActive]}>🔔 Reminder</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, type === "Alarm" && styles.toggleActive]}
-            onPress={() => setType("Alarm")}
-          >
-            <Text style={[styles.toggleText, type === "Alarm" && styles.toggleTextActive]}>⏰ Alarm</Text>
+      {/* 1. NOTES */}
+      <TouchableOpacity style={styles.sectionCard} onPress={() => setNoteExpanded(!noteExpanded)}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📝 Notes</Text>
+          <Text style={styles.chevron}>{noteExpanded ? "▲" : "▼"}</Text>
+        </View>
+        {!noteExpanded && note.length > 0 && (
+          <Text style={styles.preview}>{notePreview}</Text>
+        )}
+        {!noteExpanded && note.length === 0 && (
+          <Text style={styles.emptyHint}>Tap to add notes</Text>
+        )}
+      </TouchableOpacity>
+
+      {noteExpanded && (
+        <View style={styles.expandedContent}>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Write your notes for this day..."
+            multiline
+            value={note}
+            onChangeText={setNote}
+            placeholderTextColor="#aaa"
+          />
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNote}>
+            <Text style={styles.saveBtnText}>{noteSaved ? "✅ Saved!" : "Save Note"}</Text>
           </TouchableOpacity>
         </View>
+      )}
 
-        <TextInput
-          style={styles.input}
-          placeholder={type === "Alarm" ? "Alarm label (e.g. Wake up!)" : "Reminder message"}
-          value={label}
-          onChangeText={setLabel}
-          placeholderTextColor="#aaa"
-        />
+      {/* 2. FOOD & CALORIES */}
+      <TouchableOpacity style={styles.sectionCard} onPress={() => setFoodExpanded(!foodExpanded)}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🍎 Food & Calories</Text>
+          <Text style={styles.chevron}>{foodExpanded ? "▲" : "▼"}</Text>
+        </View>
+        <Text style={styles.sectionSummary}>
+          {totalFoodCal > 0 ? `${totalFoodCal} cal consumed` : "Tap to log food"}
+        </Text>
+      </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Type time e.g. 0630 → 06:30"
-          value={time}
-          onChangeText={(text) => {
-            const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
-            if (cleaned.length >= 3) {
-              setTime(cleaned.slice(0, 2) + ":" + cleaned.slice(2));
-            } else {
-              setTime(cleaned);
-            }
-          }}
-          placeholderTextColor="#aaa"
-          keyboardType="numeric"
-          maxLength={5}
-        />
-
-        <TouchableOpacity
-          style={[styles.repeatToggleBtn, repeatUnit !== "Once" && styles.repeatToggleActive]}
-          onPress={() => setShowRepeat(!showRepeat)}
-        >
-          <Text style={[styles.repeatToggleText, repeatUnit !== "Once" && styles.repeatToggleTextActive]}>
-            🔄 {repeatUnit !== "Once" ? `Repeat: Every ${repeatValue} ${repeatUnit}` : "Repeat: Off — tap to set"}
-          </Text>
-        </TouchableOpacity>
-
-        {showRepeat && (
-          <View style={styles.repeatPanel}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {repeatUnits.map((unit) => (
-                <TouchableOpacity
-                  key={unit}
-                  style={[styles.repeatChip, repeatUnit === unit && styles.repeatChipActive]}
-                  onPress={() => {
-                    setRepeatUnit(unit);
-                    if (unit === "Once") { setShowRepeat(false); setRepeatValue(""); }
-                  }}
-                >
-                  <Text style={[styles.repeatChipText, repeatUnit === unit && styles.repeatChipTextActive]}>
-                    {unit}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            {["Minutes", "Hours", "Days", "Weeks"].includes(repeatUnit) && (
-              <TextInput
-                style={[styles.input, { marginTop: 10 }]}
-                placeholder={`Every how many ${repeatUnit.toLowerCase()}?`}
-                value={repeatValue}
-                onChangeText={setRepeatValue}
-                placeholderTextColor="#aaa"
-                keyboardType="numeric"
-              />
-            )}
-          </View>
-        )}
-
-        <TouchableOpacity style={styles.addBtn} onPress={handleAddItem}>
-          <Text style={styles.addBtnText}>{type === "Alarm" ? "Set Alarm ⏰" : "Set Reminder 🔔"}</Text>
-        </TouchableOpacity>
-
-        {items.length > 0 && (
-          <View style={styles.itemList}>
-            {items.map((item) => (
-              <View key={item.id} style={styles.itemCard}>
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemType}>{item.type === "Alarm" ? "⏰" : "🔔"} {item.type}</Text>
-                  <Text style={styles.itemTime}>{item.time}</Text>
-                  <Text style={styles.itemLabel}>{item.label}</Text>
-                  <Text style={styles.itemRepeat}>🔄 {getRepeatLabel(item)}</Text>
+      {foodExpanded && (
+        <View style={styles.expandedContent}>
+          {foodEntries.length > 0 && (
+            <>
+              <View style={styles.macroRow}>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroEmoji}>🔥</Text>
+                  <Text style={styles.macroValue}>{totalFoodCal}</Text>
+                  <Text style={styles.macroLabel}>Cal</Text>
                 </View>
-                <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
-                  <Text style={styles.deleteText}>🗑️</Text>
-                </TouchableOpacity>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroEmoji}>🥩</Text>
+                  <Text style={styles.macroValue}>{totalFoodProtein}g</Text>
+                  <Text style={styles.macroLabel}>Protein</Text>
+                </View>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroEmoji}>🍞</Text>
+                  <Text style={styles.macroValue}>{totalFoodCarbs}g</Text>
+                  <Text style={styles.macroLabel}>Carbs</Text>
+                </View>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroEmoji}>🥑</Text>
+                  <Text style={styles.macroValue}>{totalFoodFat}g</Text>
+                  <Text style={styles.macroLabel}>Fat</Text>
+                </View>
               </View>
-            ))}
-          </View>
-        )}
-      </View>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${Math.min((totalFoodCal / 2000) * 100, 100)}%` as any }]} />
+              </View>
+              <Text style={styles.progressLabel}>{totalFoodCal} / 2000 cal daily goal</Text>
+            </>
+          )}
 
-      {/* ACTIVITY */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🏋️ Activity</Text>
+          <TouchableOpacity style={styles.logBtn} onPress={() => setShowFoodModal(true)}>
+            <Text style={styles.logBtnText}>+ Add Food</Text>
+          </TouchableOpacity>
 
-        {workouts.length > 0 && (
-          <View style={styles.activitySummary}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryEmoji}>🔥</Text>
-              <Text style={styles.summaryValue}>{totalCalories}</Text>
-              <Text style={styles.summaryLabel}>Calories</Text>
+          {MEAL_TYPES.map(meal => (
+            getMealEntries(meal).length > 0 && (
+              <View key={meal} style={styles.mealSection}>
+                <Text style={styles.mealTitle}>
+                  {meal === "Breakfast" ? "🌅" : meal === "Lunch" ? "☀️" : meal === "Dinner" ? "🌙" : "🍿"} {meal}
+                </Text>
+                {getMealEntries(meal).map(entry => (
+                  <View key={entry.id} style={styles.foodCard}>
+                    <View style={styles.foodInfo}>
+                      <Text style={styles.foodName}>{entry.name}</Text>
+                      <Text style={styles.foodPortion}>{entry.portion}</Text>
+                    </View>
+                    <View style={styles.foodRight}>
+                      <Text style={styles.foodCal}>{entry.calories} cal</Text>
+                      <TouchableOpacity onPress={() => deleteFoodEntry(entry.id)}>
+                        <Text style={styles.deleteText}>🗑️</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )
+          ))}
+        </View>
+      )}
+
+      {/* 3. ACTIVITY */}
+      <TouchableOpacity style={styles.sectionCard} onPress={() => setActivityExpanded(!activityExpanded)}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🏋️ Activity</Text>
+          <Text style={styles.chevron}>{activityExpanded ? "▲" : "▼"}</Text>
+        </View>
+        <Text style={styles.sectionSummary}>
+          {totalBurnedCal > 0 ? `${totalBurnedCal} cal burned` : "Tap to log workout"}
+        </Text>
+      </TouchableOpacity>
+
+      {activityExpanded && (
+        <View style={styles.expandedContent}>
+          {workouts.length > 0 && (
+            <View style={styles.macroRow}>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroEmoji}>🔥</Text>
+                <Text style={styles.macroValue}>{totalBurnedCal}</Text>
+                <Text style={styles.macroLabel}>Cal Burned</Text>
+              </View>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroEmoji}>⏱️</Text>
+                <Text style={styles.macroValue}>{totalWorkoutMin}</Text>
+                <Text style={styles.macroLabel}>Minutes</Text>
+              </View>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroEmoji}>💪</Text>
+                <Text style={styles.macroValue}>{workouts.length}</Text>
+                <Text style={styles.macroLabel}>Workouts</Text>
+              </View>
             </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryEmoji}>⏱️</Text>
-              <Text style={styles.summaryValue}>{totalMinutes}</Text>
-              <Text style={styles.summaryLabel}>Minutes</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryEmoji}>💪</Text>
-              <Text style={styles.summaryValue}>{workouts.length}</Text>
-              <Text style={styles.summaryLabel}>Workouts</Text>
-            </View>
-          </View>
-        )}
+          )}
 
-        <TouchableOpacity style={styles.syncBtn}>
-          <Text style={styles.syncBtnText}>⌚ Sync from Fitbit</Text>
-          <Text style={styles.syncSubText}>Connect your Fitbit to auto-sync</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.syncBtn}>
+            <Text style={styles.syncBtnText}>⌚ Sync from Fitbit</Text>
+            <Text style={styles.syncSubText}>Connect Fitbit to auto-sync</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logBtn} onPress={() => setShowWorkoutModal(true)}>
-          <Text style={styles.logBtnText}>+ Log Workout</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.logBtn} onPress={() => setShowWorkoutModal(true)}>
+            <Text style={styles.logBtnText}>+ Log Workout</Text>
+          </TouchableOpacity>
 
-        {workouts.map((workout) => (
-          <View key={workout.id} style={styles.workoutCard}>
-            <View style={styles.workoutLeft}>
+          {workouts.map(workout => (
+            <View key={workout.id} style={styles.workoutCard}>
               <Text style={styles.workoutEmoji}>{workout.emoji}</Text>
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={styles.workoutType}>{workout.type}</Text>
-              <View style={styles.workoutStats}>
-                <Text style={styles.workoutStat}>⏱️ {workout.duration} min</Text>
-                {workout.calories ? <Text style={styles.workoutStat}>🔥 {workout.calories} cal</Text> : null}
-                {workout.heartRate ? <Text style={styles.workoutStat}>❤️ {workout.heartRate} bpm</Text> : null}
+              <View style={styles.workoutInfo}>
+                <Text style={styles.workoutType}>{workout.type}</Text>
+                <View style={styles.workoutStats}>
+                  <Text style={styles.workoutStat}>⏱️ {workout.duration} min</Text>
+                  {workout.calories ? <Text style={styles.workoutStat}>🔥 {workout.calories} cal</Text> : null}
+                  {workout.heartRate ? <Text style={styles.workoutStat}>❤️ {workout.heartRate} bpm</Text> : null}
+                </View>
+                <View style={[styles.intensityBadge, { backgroundColor: getIntensityColor(workout.intensity) }]}>
+                  <Text style={styles.intensityText}>{workout.intensity}</Text>
+                </View>
               </View>
-              <View style={[styles.intensityBadge, { backgroundColor: getIntensityColor(workout.intensity) }]}>
-                <Text style={styles.intensityText}>{workout.intensity}</Text>
-              </View>
-              {workout.notes ? <Text style={styles.workoutNoteText}>{workout.notes}</Text> : null}
+              <TouchableOpacity onPress={() => deleteWorkout(workout.id)}>
+                <Text style={styles.deleteText}>🗑️</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => deleteWorkout(workout.id)}>
-              <Text style={styles.deleteText}>🗑️</Text>
+          ))}
+        </View>
+      )}
+
+      {/* 4. REMINDERS & ALARMS */}
+      <TouchableOpacity style={styles.sectionCard} onPress={() => setRemindersExpanded(!remindersExpanded)}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🔔 Reminders & Alarms</Text>
+          <Text style={styles.chevron}>{remindersExpanded ? "▲" : "▼"}</Text>
+        </View>
+        <Text style={styles.sectionSummary}>
+          {items.length > 0 ? `${items.length} set` : "Tap to add reminder or alarm"}
+        </Text>
+      </TouchableOpacity>
+
+      {remindersExpanded && (
+        <View style={styles.expandedContent}>
+          <View style={styles.toggleRow}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, type === "Reminder" && styles.toggleActive]}
+              onPress={() => setType("Reminder")}
+            >
+              <Text style={[styles.toggleText, type === "Reminder" && styles.toggleTextActive]}>🔔 Reminder</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, type === "Alarm" && styles.toggleActive]}
+              onPress={() => setType("Alarm")}
+            >
+              <Text style={[styles.toggleText, type === "Alarm" && styles.toggleTextActive]}>⏰ Alarm</Text>
             </TouchableOpacity>
           </View>
-        ))}
 
-        {workouts.length === 0 && (
-          <Text style={styles.comingSoon}>No workouts logged yet! Tap + Log Workout</Text>
-        )}
-      </View>
+          <TextInput
+            style={styles.input}
+            placeholder={type === "Alarm" ? "Alarm label" : "Reminder message"}
+            value={label}
+            onChangeText={setLabel}
+            placeholderTextColor="#aaa"
+          />
 
-      {/* FOOD */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🍎 Food & Calories</Text>
-        <Text style={styles.comingSoon}>Coming soon!</Text>
-      </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Time e.g. 0630 → 06:30"
+            value={time}
+            onChangeText={(text) => {
+              const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
+              if (cleaned.length >= 3) {
+                setTime(cleaned.slice(0, 2) + ":" + cleaned.slice(2));
+              } else {
+                setTime(cleaned);
+              }
+            }}
+            placeholderTextColor="#aaa"
+            keyboardType="numeric"
+            maxLength={5}
+          />
+
+          <TouchableOpacity
+            style={[styles.repeatToggleBtn, repeatUnit !== "Once" && styles.repeatToggleActive]}
+            onPress={() => setShowRepeat(!showRepeat)}
+          >
+            <Text style={[styles.repeatToggleText, repeatUnit !== "Once" && styles.repeatToggleTextActive]}>
+              🔄 {repeatUnit !== "Once" ? `Every ${repeatValue} ${repeatUnit}` : "Repeat: Off"}
+            </Text>
+          </TouchableOpacity>
+
+          {showRepeat && (
+            <View style={styles.repeatPanel}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {repeatUnits.map(unit => (
+                  <TouchableOpacity
+                    key={unit}
+                    style={[styles.repeatChip, repeatUnit === unit && styles.repeatChipActive]}
+                    onPress={() => {
+                      setRepeatUnit(unit);
+                      if (unit === "Once") { setShowRepeat(false); setRepeatValue(""); }
+                    }}
+                  >
+                    <Text style={[styles.repeatChipText, repeatUnit === unit && styles.repeatChipTextActive]}>{unit}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              {["Minutes", "Hours", "Days", "Weeks"].includes(repeatUnit) && (
+                <TextInput
+                  style={[styles.input, { marginTop: 10 }]}
+                  placeholder={`Every how many ${repeatUnit.toLowerCase()}?`}
+                  value={repeatValue}
+                  onChangeText={setRepeatValue}
+                  placeholderTextColor="#aaa"
+                  keyboardType="numeric"
+                />
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity style={styles.addBtn} onPress={handleAddItem}>
+            <Text style={styles.addBtnText}>{type === "Alarm" ? "Set Alarm ⏰" : "Set Reminder 🔔"}</Text>
+          </TouchableOpacity>
+
+          {items.map(item => (
+            <View key={item.id} style={styles.itemCard}>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemType}>{item.type === "Alarm" ? "⏰" : "🔔"} {item.type}</Text>
+                <Text style={styles.itemTime}>{item.time}</Text>
+                <Text style={styles.itemLabel}>{item.label}</Text>
+                <Text style={styles.itemRepeat}>🔄 {getRepeatLabel(item)}</Text>
+              </View>
+              <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
+                <Text style={styles.deleteText}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* FOOD MODAL */}
+      <Modal visible={showFoodModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>Add Food 🍎</Text>
+
+              <Text style={styles.modalLabel}>Meal Type</Text>
+              <View style={styles.mealTypeRow}>
+                {MEAL_TYPES.map(meal => (
+                  <TouchableOpacity
+                    key={meal}
+                    style={[styles.mealChip, mealType === meal && styles.mealChipActive]}
+                    onPress={() => setMealType(meal)}
+                  >
+                    <Text style={[styles.mealChipText, mealType === meal && styles.mealChipTextActive]}>{meal}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.modeToggle}>
+                <TouchableOpacity
+                  style={[styles.modeBtn, foodTab === "search" && styles.modeBtnActive]}
+                  onPress={() => setFoodTab("search")}
+                >
+                  <Text style={[styles.modeBtnText, foodTab === "search" && styles.modeBtnTextActive]}>🔍 Search</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeBtn, foodTab === "custom" && styles.modeBtnActive]}
+                  onPress={() => setFoodTab("custom")}
+                >
+                  <Text style={[styles.modeBtnText, foodTab === "custom" && styles.modeBtnTextActive]}>⭐ Custom</Text>
+                </TouchableOpacity>
+              </View>
+
+              {foodTab === "search" ? (
+                <>
+                  <TouchableOpacity
+                    style={[styles.voiceBtn, isRecording && styles.voiceBtnActive]}
+                    onPress={isRecording ? stopRecording : startRecording}
+                  >
+                    <Text style={styles.voiceBtnText}>{isRecording ? "⏹️ Stop" : "🎤 Speak food name"}</Text>
+                  </TouchableOpacity>
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Search food..."
+                    value={searchText}
+                    onChangeText={handleFoodSearch}
+                    placeholderTextColor="#aaa"
+                  />
+
+                  {searchResults.map(food => (
+                    <TouchableOpacity
+                      key={food.name}
+                      style={[styles.resultItem, selectedFood?.name === food.name && styles.resultItemActive]}
+                      onPress={() => selectFood(food)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.resultName}>{food.custom ? "⭐ " : ""}{food.name}</Text>
+                        <Text style={styles.resultPortion}>{food.portion} · {food.category}</Text>
+                      </View>
+                      <Text style={styles.resultCalories}>{food.calories} cal</Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  {searchText.length >= 2 && searchResults.length === 0 && (
+                    <TouchableOpacity style={styles.notFoundBtn} onPress={() => setFoodTab("custom")}>
+                      <Text style={styles.notFoundText}>Not found — add as custom ⭐</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {selectedFood && (
+                    <View style={styles.selectedCard}>
+                      <Text style={styles.selectedTitle}>✅ {selectedFood.name}</Text>
+                      <View style={styles.macroRow}>
+                        <Text style={styles.macro}>🔥 {selectedFood.calories}</Text>
+                        <Text style={styles.macro}>🥩 {selectedFood.protein}g</Text>
+                        <Text style={styles.macro}>🍞 {selectedFood.carbs}g</Text>
+                        <Text style={styles.macro}>🥑 {selectedFood.fat}g</Text>
+                      </View>
+                      <TextInput
+                        style={[styles.input, { marginTop: 10 }]}
+                        placeholder="Portion size"
+                        value={portion}
+                        onChangeText={setPortion}
+                        placeholderTextColor="#aaa"
+                      />
+                      <TouchableOpacity style={styles.confirmBtn} onPress={addFoodEntry}>
+                        <Text style={styles.confirmBtnText}>Add to Log ✅</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.customNote}>⭐ Saved to your personal database for future searches!</Text>
+                  <TextInput style={styles.input} placeholder="Food name *" value={customName} onChangeText={setCustomName} placeholderTextColor="#aaa" />
+                  <TextInput style={styles.input} placeholder="Calories *" value={customCalories} onChangeText={setCustomCalories} keyboardType="numeric" placeholderTextColor="#aaa" />
+                  <TextInput style={styles.input} placeholder="Protein (g)" value={customProtein} onChangeText={setCustomProtein} keyboardType="numeric" placeholderTextColor="#aaa" />
+                  <TextInput style={styles.input} placeholder="Carbs (g)" value={customCarbs} onChangeText={setCustomCarbs} keyboardType="numeric" placeholderTextColor="#aaa" />
+                  <TextInput style={styles.input} placeholder="Fat (g)" value={customFat} onChangeText={setCustomFat} keyboardType="numeric" placeholderTextColor="#aaa" />
+                  <TextInput style={styles.input} placeholder="Portion size" value={customPortion} onChangeText={setCustomPortion} placeholderTextColor="#aaa" />
+                  <TouchableOpacity style={styles.confirmBtn} onPress={saveCustomFood}>
+                    <Text style={styles.confirmBtnText}>Save & Add ⭐</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <TouchableOpacity style={styles.cancelBtn} onPress={resetFoodModal}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* WORKOUT MODAL */}
       <Modal visible={showWorkoutModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalTitle}>Log Workout</Text>
+              <Text style={styles.modalTitle}>Log Workout 🏋️</Text>
 
               <Text style={styles.modalLabel}>Workout Type</Text>
               <View style={styles.typeGrid}>
-                {WORKOUT_TYPES.map((wtype) => (
+                {WORKOUT_TYPES.map(wtype => (
                   <TouchableOpacity
                     key={wtype.name}
                     style={[styles.typeChip, selectedType.name === wtype.name && styles.typeChipActive]}
                     onPress={() => setSelectedType(wtype)}
                   >
                     <Text style={styles.typeEmoji}>{wtype.emoji}</Text>
-                    <Text style={[styles.typeName, selectedType.name === wtype.name && styles.typeNameActive]}>
-                      {wtype.name}
-                    </Text>
+                    <Text style={[styles.typeName, selectedType.name === wtype.name && styles.typeNameActive]}>{wtype.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               {selectedType.name === "Custom" && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Custom workout name"
-                  value={customType}
-                  onChangeText={setCustomType}
-                  placeholderTextColor="#aaa"
-                />
+                <TextInput style={styles.input} placeholder="Workout name" value={customWorkoutType} onChangeText={setCustomWorkoutType} placeholderTextColor="#aaa" />
               )}
 
               <Text style={styles.modalLabel}>Duration (minutes) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 45"
-                value={duration}
-                onChangeText={setDuration}
-                keyboardType="numeric"
-                placeholderTextColor="#aaa"
-              />
+              <TextInput style={styles.input} placeholder="e.g. 45" value={duration} onChangeText={setDuration} keyboardType="numeric" placeholderTextColor="#aaa" />
 
               <Text style={styles.modalLabel}>Calories Burned</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 320"
-                value={calories}
-                onChangeText={setCalories}
-                keyboardType="numeric"
-                placeholderTextColor="#aaa"
-              />
+              <TextInput style={styles.input} placeholder="e.g. 320" value={wCalories} onChangeText={setWCalories} keyboardType="numeric" placeholderTextColor="#aaa" />
 
               <Text style={styles.modalLabel}>Avg Heart Rate (bpm)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 145"
-                value={heartRate}
-                onChangeText={setHeartRate}
-                keyboardType="numeric"
-                placeholderTextColor="#aaa"
-              />
+              <TextInput style={styles.input} placeholder="e.g. 145" value={heartRate} onChangeText={setHeartRate} keyboardType="numeric" placeholderTextColor="#aaa" />
 
               <Text style={styles.modalLabel}>Intensity</Text>
               <View style={styles.intensityRow}>
-                {INTENSITIES.map((level) => (
+                {INTENSITIES.map(level => (
                   <TouchableOpacity
                     key={level}
                     style={[styles.intensityChip, intensity === level && { backgroundColor: getIntensityColor(level) }]}
                     onPress={() => setIntensity(level)}
                   >
-                    <Text style={[styles.intensityChipText, intensity === level && styles.intensityChipTextActive]}>
-                      {level}
-                    </Text>
+                    <Text style={[styles.intensityChipText, intensity === level && styles.intensityChipTextActive]}>{level}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               <Text style={styles.modalLabel}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.notesInput]}
-                placeholder="How did it feel?"
-                value={workoutNotes}
-                onChangeText={setWorkoutNotes}
-                multiline
-                placeholderTextColor="#aaa"
-              />
+              <TextInput style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]} placeholder="How did it feel?" value={workoutNotes} onChangeText={setWorkoutNotes} multiline placeholderTextColor="#aaa" />
 
-              <TouchableOpacity style={styles.saveBtn} onPress={saveWorkout}>
-                <Text style={styles.saveBtnText}>Save Workout 💪</Text>
+              <TouchableOpacity style={styles.confirmBtn} onPress={saveWorkout}>
+                <Text style={styles.confirmBtnText}>Save Workout 💪</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.cancelBtn} onPress={() => { setShowWorkoutModal(false); resetWorkoutForm(); }}>
@@ -521,18 +990,54 @@ const styles = StyleSheet.create({
   headerEmoji: { fontSize: 40, marginBottom: 8 },
   headerDate: { fontSize: 20, fontWeight: "bold", color: "#fff" },
   headerShift: { fontSize: 16, color: "#fff", marginTop: 4, opacity: 0.9 },
-  section: {
-    backgroundColor: "#fff", margin: 16, marginTop: 0,
-    borderRadius: 16, padding: 20,
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-  },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#2d2d2d", marginBottom: 12 },
-  noteInput: {
-    borderWidth: 1, borderColor: "#eee", borderRadius: 10,
-    padding: 12, fontSize: 15, color: "#2d2d2d", minHeight: 100, textAlignVertical: "top",
-  },
+  netCard: { backgroundColor: "#fff", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, borderLeftWidth: 4, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  netTitle: { fontSize: 14, color: "#888", fontWeight: "bold", marginBottom: 4 },
+  netValue: { fontSize: 32, fontWeight: "bold", marginBottom: 4 },
+  netLabel: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d", marginBottom: 4 },
+  netDesc: { fontSize: 13, color: "#888", marginBottom: 12 },
+  netRow: { flexDirection: "row", justifyContent: "space-between" },
+  netItem: { fontSize: 13, color: "#555", fontWeight: "bold" },
+  sectionCard: { backgroundColor: "#fff", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#2d2d2d" },
+  chevron: { fontSize: 14, color: "#888" },
+  sectionSummary: { fontSize: 14, color: "#888", marginTop: 6 },
+  preview: { fontSize: 13, color: "#555", marginTop: 6, fontStyle: "italic" },
+  emptyHint: { fontSize: 13, color: "#bbb", marginTop: 6 },
+  expandedContent: { backgroundColor: "#fff", marginHorizontal: 16, marginTop: -8, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, padding: 20, paddingTop: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, marginBottom: 4 },
+  noteInput: { borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, fontSize: 15, color: "#2d2d2d", minHeight: 120, textAlignVertical: "top" },
   saveBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 12 },
   saveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  macroRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 12 },
+  macroItem: { alignItems: "center" },
+  macroEmoji: { fontSize: 20, marginBottom: 2 },
+  macroValue: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d" },
+  macroLabel: { fontSize: 11, color: "#888" },
+  progressBar: { height: 6, backgroundColor: "#f0f0f0", borderRadius: 3, overflow: "hidden", marginBottom: 4 },
+  progressFill: { height: "100%", backgroundColor: "#4CAF50", borderRadius: 3 },
+  progressLabel: { fontSize: 11, color: "#888", textAlign: "center", marginBottom: 12 },
+  logBtn: { backgroundColor: "#4A90E2", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
+  logBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  mealSection: { marginBottom: 10 },
+  mealTitle: { fontSize: 14, fontWeight: "bold", color: "#555", marginBottom: 6 },
+  foodCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 10, marginBottom: 6 },
+  foodInfo: { flex: 1 },
+  foodName: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
+  foodPortion: { fontSize: 12, color: "#888" },
+  foodRight: { alignItems: "flex-end" },
+  foodCal: { fontSize: 14, fontWeight: "bold", color: "#4CAF50" },
+  deleteText: { fontSize: 18, marginTop: 4 },
+  syncBtn: { backgroundColor: "#f0f0f0", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
+  syncBtnText: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
+  syncSubText: { fontSize: 12, color: "#888", marginTop: 2 },
+  workoutCard: { flexDirection: "row", alignItems: "flex-start", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, marginBottom: 8 },
+  workoutEmoji: { fontSize: 28, marginRight: 12 },
+  workoutInfo: { flex: 1 },
+  workoutType: { fontSize: 15, fontWeight: "bold", color: "#2d2d2d" },
+  workoutStats: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  workoutStat: { fontSize: 12, color: "#555" },
+  intensityBadge: { alignSelf: "flex-start", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginTop: 6 },
+  intensityText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   toggleRow: { flexDirection: "row", marginBottom: 12, gap: 10 },
   toggleBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
   toggleActive: { backgroundColor: "#7B68EE", borderColor: "#7B68EE" },
@@ -550,50 +1055,52 @@ const styles = StyleSheet.create({
   repeatChipTextActive: { color: "#fff" },
   addBtn: { backgroundColor: "#7B68EE", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 4 },
   addBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  itemList: { marginTop: 16 },
-  itemCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, marginBottom: 8 },
+  itemCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, marginBottom: 8, marginTop: 8 },
   itemInfo: { flex: 1 },
   itemType: { fontSize: 12, color: "#7B68EE", fontWeight: "bold" },
   itemTime: { fontSize: 20, fontWeight: "bold", color: "#2d2d2d" },
   itemLabel: { fontSize: 13, color: "#555" },
   itemRepeat: { fontSize: 12, color: "#aaa", marginTop: 2 },
-  deleteText: { fontSize: 20 },
-  activitySummary: { flexDirection: "row", justifyContent: "space-around", marginBottom: 16 },
-  summaryItem: { alignItems: "center" },
-  summaryEmoji: { fontSize: 24, marginBottom: 4 },
-  summaryValue: { fontSize: 20, fontWeight: "bold", color: "#2d2d2d" },
-  summaryLabel: { fontSize: 12, color: "#888", marginTop: 2 },
-  syncBtn: { backgroundColor: "#f0f0f0", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
-  syncBtnText: { fontSize: 15, fontWeight: "bold", color: "#2d2d2d" },
-  syncSubText: { fontSize: 12, color: "#888", marginTop: 4 },
-  logBtn: { backgroundColor: "#4A90E2", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 12 },
-  logBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  workoutCard: { flexDirection: "row", alignItems: "flex-start", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, marginBottom: 10 },
-  workoutLeft: { marginRight: 12 },
-  workoutEmoji: { fontSize: 32 },
-  workoutInfo: { flex: 1 },
-  workoutType: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d" },
-  workoutStats: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
-  workoutStat: { fontSize: 13, color: "#555" },
-  intensityBadge: { alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6 },
-  intensityText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
-  workoutNoteText: { fontSize: 12, color: "#888", marginTop: 6, fontStyle: "italic" },
-  comingSoon: { color: "#aaa", fontSize: 14, fontStyle: "italic" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalContent: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "90%" },
   modalTitle: { fontSize: 22, fontWeight: "bold", color: "#2d2d2d", marginBottom: 20, textAlign: "center" },
   modalLabel: { fontSize: 14, fontWeight: "bold", color: "#555", marginBottom: 8, marginTop: 4 },
+  mealTypeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
+  mealChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#eee" },
+  mealChipActive: { backgroundColor: "#4CAF50", borderColor: "#4CAF50" },
+  mealChipText: { fontSize: 13, color: "#888", fontWeight: "bold" },
+  mealChipTextActive: { color: "#fff" },
+  modeToggle: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  modeBtn: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
+  modeBtnActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
+  modeBtnText: { fontSize: 14, color: "#888", fontWeight: "bold" },
+  modeBtnTextActive: { color: "#fff" },
+  voiceBtn: { backgroundColor: "#f0f0f0", borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 12 },
+  voiceBtnActive: { backgroundColor: "#FF3B30" },
+  voiceBtnText: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d" },
+  resultItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 12, marginBottom: 8 },
+  resultItemActive: { backgroundColor: "#e8f4ff", borderColor: "#4A90E2" },
+  resultName: { fontSize: 14, fontWeight: "bold", color: "#2d2d2d" },
+  resultPortion: { fontSize: 12, color: "#888" },
+  resultCalories: { fontSize: 16, fontWeight: "bold", color: "#4CAF50" },
+  notFoundBtn: { padding: 12, alignItems: "center" },
+  notFoundText: { fontSize: 14, color: "#4A90E2", fontWeight: "bold" },
+  selectedCard: { backgroundColor: "#f0f7ff", borderRadius: 12, padding: 16, marginBottom: 12 },
+  selectedTitle: { fontSize: 16, fontWeight: "bold", color: "#2d2d2d", marginBottom: 8 },
+  macro: { fontSize: 13, color: "#555", fontWeight: "bold" },
+  customNote: { fontSize: 13, color: "#7B68EE", backgroundColor: "#f0edff", borderRadius: 10, padding: 12, marginBottom: 12, textAlign: "center" },
+  confirmBtn: { backgroundColor: "#4CAF50", borderRadius: 12, padding: 16, alignItems: "center", marginTop: 8 },
+  confirmBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  cancelBtn: { borderRadius: 12, padding: 16, alignItems: "center", marginTop: 8 },
+  cancelBtnText: { color: "#888", fontSize: 16 },
   typeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   typeChip: { alignItems: "center", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, width: "28%" },
   typeChipActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
   typeEmoji: { fontSize: 24, marginBottom: 4 },
   typeName: { fontSize: 11, color: "#888", fontWeight: "bold" },
   typeNameActive: { color: "#fff" },
-  notesInput: { minHeight: 80, textAlignVertical: "top" },
   intensityRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   intensityChip: { flex: 1, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#eee", alignItems: "center" },
   intensityChipText: { fontSize: 12, color: "#888", fontWeight: "bold" },
   intensityChipTextActive: { color: "#fff" },
-  cancelBtn: { borderRadius: 12, padding: 16, alignItems: "center", marginTop: 8 },
-  cancelBtnText: { color: "#888", fontSize: 16 },
 });
