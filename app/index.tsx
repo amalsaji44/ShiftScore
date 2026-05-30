@@ -15,12 +15,6 @@ export default function Index() {
         <Text style={styles.cardSub}>View your shift schedule</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push("/food")}>
-        <Text style={styles.cardIcon}>🍎</Text>
-        <Text style={styles.cardTitle}>Food & Calories</Text>
-        <Text style={styles.cardSub}>Track your nutrition with AI</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity style={styles.card} onPress={() => router.push("/health")}>
         <Text style={styles.cardIcon}>❤️</Text>
         <Text style={styles.cardTitle}>Health</Text>
