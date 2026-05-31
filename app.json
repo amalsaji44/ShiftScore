@@ -18,18 +18,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "package": "com.amalsaji44.ShiftScore",
-      "minSdkVersion": 26,
-      "permissions": [
-        "android.permission.ACTIVITY_RECOGNITION",
-        "android.permission.BODY_SENSORS",
-        "android.permission.health.READ_STEPS",
-        "android.permission.health.READ_HEART_RATE",
-        "android.permission.health.READ_CALORIES_TOTAL",
-        "android.permission.health.READ_SLEEP",
-        "android.permission.health.READ_DISTANCE",
-        "android.permission.health.READ_ACTIVE_CALORIES_BURNED"
-      ]
+      "package": "com.amalsaji44.ShiftScore"
     },
     "ios": {
       "supportsTablet": true,
@@ -37,13 +26,7 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font",
-      [
-        "react-native-health-connect",
-        {
-          "healthConnectVersion": "1.0.0"
-        }
-      ]
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

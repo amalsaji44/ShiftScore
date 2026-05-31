@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -11,13 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  getSdkStatus,
-  initialize,
-  readRecords,
-  requestPermission,
-  SdkAvailabilityStatus,
-} from "react-native-health-connect";
 
 type HealthEntry = {
   date: string;
@@ -69,118 +61,13 @@ export default function Health() {
 
   const [history, setHistory] = useState<HealthEntry[]>([]);
   const [saved, setSaved] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [weightInput, setWeightInput] = useState("");
-  const [healthConnectAvailable, setHealthConnectAvailable] = useState(false);
 
   useEffect(() => {
     loadToday();
     loadHistory();
-    checkHealthConnect();
   }, []);
-
-  async function checkHealthConnect() {
-    try {
-      const status = await getSdkStatus();
-      if (status === SdkAvailabilityStatus.SDK_AVAILABLE) {
-        setHealthConnectAvailable(true);
-      }
-    } catch (e) { console.log("Health Connect not available", e); }
-  }
-
-  async function syncFromHealthConnect() {
-    setSyncing(true);
-    try {
-      const isInitialized = await initialize();
-      if (!isInitialized) {
-        Alert.alert("Health Connect not available on this device!");
-        setSyncing(false);
-        return;
-      }
-
-      await requestPermission([
-        { accessType: "read", recordType: "Steps" },
-        { accessType: "read", recordType: "HeartRate" },
-        { accessType: "read", recordType: "ActiveCaloriesBurned" },
-        { accessType: "read", recordType: "SleepSession" },
-      ]);
-
-      const startTime = new Date();
-      startTime.setHours(0, 0, 0, 0);
-      const endTime = new Date();
-      endTime.setHours(23, 59, 59, 999);
-
-      const timeRangeFilter = {
-        operator: "between" as const,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      };
-
-      // Steps
-      let totalSteps = 0;
-      try {
-        const stepsData = await readRecords("Steps", { timeRangeFilter });
-        totalSteps = stepsData.records.reduce((sum: number, r: any) => sum + r.count, 0);
-      } catch (e) { console.log("Steps error", e); }
-
-      // Heart Rate
-      let avgHeartRate = 0;
-      try {
-        const hrData = await readRecords("HeartRate", { timeRangeFilter });
-        if (hrData.records.length > 0) {
-          const allSamples = hrData.records.flatMap((r: any) => r.samples);
-          avgHeartRate = Math.round(allSamples.reduce((sum: number, s: any) => sum + s.beatsPerMinute, 0) / allSamples.length);
-        }
-      } catch (e) { console.log("Heart rate error", e); }
-
-      // Calories
-      let totalCalories = 0;
-      try {
-        const calData = await readRecords("ActiveCaloriesBurned", { timeRangeFilter });
-        totalCalories = Math.round(calData.records.reduce((sum: number, r: any) => sum + r.energy.inKilocalories, 0));
-      } catch (e) { console.log("Calories error", e); }
-
-      // Sleep (last night)
-      let sleepHours = 0;
-      try {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(18, 0, 0, 0);
-        const sleepData = await readRecords("SleepSession", {
-          timeRangeFilter: {
-            operator: "between" as const,
-            startTime: yesterday.toISOString(),
-            endTime: endTime.toISOString(),
-          }
-        });
-        if (sleepData.records.length > 0) {
-          const totalMs = sleepData.records.reduce((sum: number, r: any) => {
-            return sum + (new Date(r.endTime).getTime() - new Date(r.startTime).getTime());
-          }, 0);
-          sleepHours = Math.round((totalMs / (1000 * 60 * 60)) * 10) / 10;
-        }
-      } catch (e) { console.log("Sleep error", e); }
-
-      const updated = {
-        ...entry,
-        steps: totalSteps || entry.steps,
-        heartRate: avgHeartRate || entry.heartRate,
-        caloriesBurned: totalCalories || entry.caloriesBurned,
-        sleep: sleepHours || entry.sleep,
-      };
-
-      await saveEntry(updated);
-      Alert.alert(
-        "✅ Synced from Health Connect!",
-        `Steps: ${totalSteps}\nHeart Rate: ${avgHeartRate} bpm\nCalories: ${totalCalories} cal\nSleep: ${sleepHours}h`
-      );
-    } catch (e) {
-      Alert.alert("Sync failed", "Make sure Health Connect is installed and permissions are granted!");
-      console.log(e);
-    }
-    setSyncing(false);
-  }
 
   async function loadToday() {
     try {
@@ -244,23 +131,14 @@ export default function Health() {
       <Text style={styles.title}>❤️ Health</Text>
       <Text style={styles.subtitle}>{today}</Text>
 
-      {/* SYNC CARD */}
-      <TouchableOpacity
-        style={[styles.syncCard, syncing && styles.syncCardActive]}
-        onPress={syncFromHealthConnect}
-        disabled={syncing}
-      >
+      {/* FITBIT SYNC PLACEHOLDER */}
+      <View style={styles.syncCard}>
         <Text style={styles.syncCardIcon}>⌚</Text>
         <View style={styles.syncCardInfo}>
-          <Text style={styles.syncCardTitle}>
-            {syncing ? "Syncing..." : "Sync from Health Connect"}
-          </Text>
-          <Text style={styles.syncCardSub}>
-            Auto-fill steps, heart rate, calories & sleep
-          </Text>
+          <Text style={styles.syncCardTitle}>Fitbit Sync — Coming Soon</Text>
+          <Text style={styles.syncCardSub}>Auto-fill steps, heart rate, calories & sleep</Text>
         </View>
-        <Text style={styles.syncCardArrow}>{syncing ? "⏳" : "→"}</Text>
-      </TouchableOpacity>
+      </View>
 
       {/* TODAY SUMMARY */}
       <View style={styles.summaryCard}>
@@ -296,13 +174,12 @@ export default function Health() {
           </View>
         </View>
 
-        {/* Steps progress */}
         {entry.steps > 0 && (
           <>
             <View style={styles.stepsBar}>
               <View style={[styles.stepsFill, { width: `${Math.min((entry.steps / 10000) * 100, 100)}%` as any }]} />
             </View>
-            <Text style={styles.stepsLabel}>{entry.steps.toLocaleString()} / 10,000 steps goal</Text>
+            <Text style={styles.stepsLabel}>{entry.steps.toLocaleString()} / 10,000 steps</Text>
           </>
         )}
       </View>
@@ -395,14 +272,54 @@ export default function Health() {
         <Text style={styles.waterGoal}>{entry.water}/8 glasses</Text>
       </View>
 
-      {/* WEIGHT */}
+      {/* VITALS */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⚖️ Weight</Text>
-        <TouchableOpacity style={styles.weightBtn} onPress={() => setShowWeightModal(true)}>
-          <Text style={styles.weightBtnText}>
-            {entry.weight > 0 ? `${entry.weight} kg` : "Tap to log weight"}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>💓 Vitals</Text>
+        <View style={styles.vitalRow}>
+          <View style={styles.vitalItem}>
+            <Text style={styles.vitalLabel}>❤️ Heart Rate</Text>
+            <TextInput
+              style={styles.vitalInput}
+              placeholder="bpm"
+              value={entry.heartRate > 0 ? String(entry.heartRate) : ""}
+              onChangeText={(v) => updateField("heartRate", parseInt(v) || 0)}
+              keyboardType="numeric"
+              placeholderTextColor="#444"
+            />
+          </View>
+          <View style={styles.vitalItem}>
+            <Text style={styles.vitalLabel}>👟 Steps</Text>
+            <TextInput
+              style={styles.vitalInput}
+              placeholder="0"
+              value={entry.steps > 0 ? String(entry.steps) : ""}
+              onChangeText={(v) => updateField("steps", parseInt(v) || 0)}
+              keyboardType="numeric"
+              placeholderTextColor="#444"
+            />
+          </View>
+        </View>
+        <View style={styles.vitalRow}>
+          <View style={styles.vitalItem}>
+            <Text style={styles.vitalLabel}>🔥 Cal Burned</Text>
+            <TextInput
+              style={styles.vitalInput}
+              placeholder="0"
+              value={entry.caloriesBurned > 0 ? String(entry.caloriesBurned) : ""}
+              onChangeText={(v) => updateField("caloriesBurned", parseInt(v) || 0)}
+              keyboardType="numeric"
+              placeholderTextColor="#444"
+            />
+          </View>
+          <View style={styles.vitalItem}>
+            <Text style={styles.vitalLabel}>⚖️ Weight</Text>
+            <TouchableOpacity style={styles.weightBtn} onPress={() => setShowWeightModal(true)}>
+              <Text style={styles.weightBtnText}>
+                {entry.weight > 0 ? `${entry.weight} kg` : "Log"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* NOTES */}
@@ -439,13 +356,6 @@ export default function Health() {
                 {(history.reduce((s, h) => s + h.water, 0) / history.length).toFixed(1)}
               </Text>
               <Text style={styles.trendLabel}>Avg Water</Text>
-            </View>
-            <View style={styles.trendItem}>
-              <Text style={styles.trendEmoji}>👟</Text>
-              <Text style={styles.trendValue}>
-                {Math.round(history.reduce((s, h) => s + h.steps, 0) / history.length).toLocaleString()}
-              </Text>
-              <Text style={styles.trendLabel}>Avg Steps</Text>
             </View>
           </View>
         </View>
@@ -499,13 +409,11 @@ const styles = StyleSheet.create({
   backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
   title: { fontSize: 28, fontWeight: "bold", color: "#fff", textAlign: "center" },
   subtitle: { fontSize: 14, color: "#888", textAlign: "center", marginBottom: 16 },
-  syncCard: { backgroundColor: "#1a1a2a", margin: 16, borderRadius: 16, padding: 18, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#4A90E2" },
-  syncCardActive: { backgroundColor: "#0a0a1a", borderColor: "#7B68EE" },
+  syncCard: { backgroundColor: "#1a1a2a", margin: 16, borderRadius: 16, padding: 18, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#333" },
   syncCardIcon: { fontSize: 32, marginRight: 14 },
   syncCardInfo: { flex: 1 },
-  syncCardTitle: { fontSize: 16, fontWeight: "bold", color: "#fff" },
-  syncCardSub: { fontSize: 12, color: "#666", marginTop: 4 },
-  syncCardArrow: { fontSize: 18, color: "#4A90E2" },
+  syncCardTitle: { fontSize: 16, fontWeight: "bold", color: "#888" },
+  syncCardSub: { fontSize: 12, color: "#555", marginTop: 4 },
   summaryCard: { backgroundColor: "#1a1a1a", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#2a2a2a" },
   cardTitle: { fontSize: 16, fontWeight: "bold", color: "#fff", marginBottom: 16 },
   summaryGrid: { flexDirection: "row", justifyContent: "space-around", marginBottom: 12 },
@@ -538,7 +446,11 @@ const styles = StyleSheet.create({
   waterDrops: { flexDirection: "row", justifyContent: "center", gap: 6, marginBottom: 8 },
   waterDrop: { fontSize: 22 },
   waterGoal: { fontSize: 12, color: "#666", textAlign: "center" },
-  weightBtn: { backgroundColor: "#222", borderRadius: 12, padding: 16, alignItems: "center", borderWidth: 1, borderColor: "#2a2a2a" },
+  vitalRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  vitalItem: { flex: 1 },
+  vitalLabel: { fontSize: 13, fontWeight: "bold", color: "#888", marginBottom: 6 },
+  vitalInput: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 10, fontSize: 16, color: "#fff", textAlign: "center", backgroundColor: "#222" },
+  weightBtn: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 10, alignItems: "center", backgroundColor: "#222" },
   weightBtnText: { fontSize: 15, fontWeight: "bold", color: "#888" },
   notesInput: { borderWidth: 1, borderColor: "#2a2a2a", borderRadius: 10, padding: 12, fontSize: 15, color: "#fff", minHeight: 80, textAlignVertical: "top", backgroundColor: "#222" },
   trendRow: { flexDirection: "row", justifyContent: "space-around" },
