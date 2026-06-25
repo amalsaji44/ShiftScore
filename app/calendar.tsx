@@ -22,75 +22,70 @@ const DEFAULT_SCHEDULE: ShiftSchedule = {
   cycleLength: 9,
   startDate: "2026-05-05",
   shifts: [
-    { id: "1", name: "Day Shift", color: "#4A90E2", emoji: "🌅" },
-    { id: "2", name: "Day Shift", color: "#4A90E2", emoji: "🌅" },
-    { id: "3", name: "Night Shift", color: "#7B68EE", emoji: "🌙" },
-    { id: "4", name: "Night Shift", color: "#7B68EE", emoji: "🌙" },
-    { id: "5", name: "Day Off", color: "#4CAF50", emoji: "✅" },
-    { id: "6", name: "Day Off", color: "#4CAF50", emoji: "✅" },
-    { id: "7", name: "Day Off", color: "#4CAF50", emoji: "✅" },
-    { id: "8", name: "Day Off", color: "#4CAF50", emoji: "✅" },
-    { id: "9", name: "Day Off", color: "#4CAF50", emoji: "✅" },
+    { id: "1", name: "Day", color: "#4A90E2", emoji: "🌅" },
+    { id: "2", name: "Day", color: "#4A90E2", emoji: "🌅" },
+    { id: "3", name: "Night", color: "#7B68EE", emoji: "🌙" },
+    { id: "4", name: "Night", color: "#7B68EE", emoji: "🌙" },
+    { id: "5", name: "Off", color: "#30D158", emoji: "✓" },
+    { id: "6", name: "Off", color: "#30D158", emoji: "✓" },
+    { id: "7", name: "Off", color: "#30D158", emoji: "✓" },
+    { id: "8", name: "Off", color: "#30D158", emoji: "✓" },
+    { id: "9", name: "Off", color: "#30D158", emoji: "✓" },
   ],
 };
 
 const CITY_COORDS: { [key: string]: { lat: number; lng: number; tz: string } } = {
-  "London ON":     { lat: 42.9849, lng: -81.2453, tz: "America%2FToronto" },
-  "Toronto ON":    { lat: 43.6532, lng: -79.3832, tz: "America%2FToronto" },
-  "Ottawa ON":     { lat: 45.4215, lng: -75.6972, tz: "America%2FToronto" },
-  "Vancouver BC":  { lat: 49.2827, lng: -123.1207, tz: "America%2FVancouver" },
-  "Calgary AB":    { lat: 51.0447, lng: -114.0719, tz: "America%2FCalgary" },
-  "Montreal QC":   { lat: 45.5017, lng: -73.5673, tz: "America%2FToronto" },
-  "Edmonton AB":   { lat: 53.5461, lng: -113.4938, tz: "America%2FCalgary" },
-  "Winnipeg MB":   { lat: 49.8951, lng: -97.1384, tz: "America%2FWinnipeg" },
-  "Hamilton ON":   { lat: 43.2557, lng: -79.8711, tz: "America%2FToronto" },
-  "Kitchener ON":  { lat: 43.4516, lng: -80.4925, tz: "America%2FToronto" },
-  "Halifax NS":    { lat: 44.6488, lng: -63.5752, tz: "America%2FHalifax" },
-  "Victoria BC":   { lat: 48.4284, lng: -123.3656, tz: "America%2FVancouver" },
+  "London ON":    { lat: 42.9849, lng: -81.2453, tz: "America%2FToronto" },
+  "Toronto ON":   { lat: 43.6532, lng: -79.3832, tz: "America%2FToronto" },
+  "Ottawa ON":    { lat: 45.4215, lng: -75.6972, tz: "America%2FToronto" },
+  "Vancouver BC": { lat: 49.2827, lng: -123.1207, tz: "America%2FVancouver" },
+  "Calgary AB":   { lat: 51.0447, lng: -114.0719, tz: "America%2FCalgary" },
+  "Montreal QC":  { lat: 45.5017, lng: -73.5673, tz: "America%2FToronto" },
+  "Edmonton AB":  { lat: 53.5461, lng: -113.4938, tz: "America%2FCalgary" },
+  "Winnipeg MB":  { lat: 49.8951, lng: -97.1384, tz: "America%2FWinnipeg" },
+  "Hamilton ON":  { lat: 43.2557, lng: -79.8711, tz: "America%2FToronto" },
+  "Kitchener ON": { lat: 43.4516, lng: -80.4925, tz: "America%2FToronto" },
+  "Halifax NS":   { lat: 44.6488, lng: -63.5752, tz: "America%2FHalifax" },
+  "Victoria BC":  { lat: 48.4284, lng: -123.3656, tz: "America%2FVancouver" },
 };
 
 const DAY_LABELS = [
-  { label: "🏃 Easy Run", color: "#4CAF50" },
-  { label: "⚡ Speed Intervals", color: "#FF9500" },
-  { label: "🏃 Long Run", color: "#2E7D32" },
-  { label: "🏋️ Upper Body", color: "#1565C0" },
-  { label: "🏋️ Lower Body", color: "#6A1B9A" },
-  { label: "🏋️ Full Body", color: "#4A90E2" },
-  { label: "🏋️ Push", color: "#E53935" },
-  { label: "🏋️ Pull", color: "#8E24AA" },
-  { label: "🏋️ Legs", color: "#F4511E" },
-  { label: "🏋️ Abs", color: "#00897B" },
-  { label: "💪 Arms", color: "#3949AB" },
-  { label: "💪 Biceps", color: "#1E88E5" },
-  { label: "💪 Triceps", color: "#D81B60" },
-  { label: "🏋️ Back", color: "#6D4C41" },
-  { label: "💪 Shoulders", color: "#546E7A" },
-  { label: "💪 Forearms", color: "#795548" },
-  { label: "🚴 Cycling", color: "#FF9500" },
-  { label: "🏊 Swimming", color: "#00BCD4" },
-  { label: "⚽ Soccer", color: "#43A047" },
-  { label: "🏸 Badminton", color: "#FDD835" },
-  { label: "🧘 Yoga", color: "#7B68EE" },
-  { label: "🚶 Walk", color: "#8BC34A" },
-  { label: "❤️ Cardio", color: "#E91E63" },
-  { label: "⚡ HIIT", color: "#FF3D00" },
-  { label: "😴 Rest Day", color: "#888" },
-  { label: "🧊 Recovery", color: "#00ACC1" },
-  { label: "🏥 Work", color: "#EF5350" },
-  { label: "📅 Off Day", color: "#BDBDBD" },
+  { label: "Easy Run", color: "#30D158" },
+  { label: "Speed Work", color: "#FF9F0A" },
+  { label: "Long Run", color: "#2E7D32" },
+  { label: "Upper Body", color: "#4A90E2" },
+  { label: "Lower Body", color: "#7B68EE" },
+  { label: "Full Body", color: "#00BCD4" },
+  { label: "Push", color: "#FF453A" },
+  { label: "Pull", color: "#BF5AF2" },
+  { label: "Legs", color: "#FF6B35" },
+  { label: "Abs", color: "#30D158" },
+  { label: "Arms", color: "#4A90E2" },
+  { label: "Back", color: "#795548" },
+  { label: "Shoulders", color: "#607D8B" },
+  { label: "Cycling", color: "#FF9F0A" },
+  { label: "Swimming", color: "#00BCD4" },
+  { label: "Soccer", color: "#30D158" },
+  { label: "Badminton", color: "#FF9F0A" },
+  { label: "Yoga", color: "#BF5AF2" },
+  { label: "Walk", color: "#8BC34A" },
+  { label: "Cardio", color: "#FF453A" },
+  { label: "HIIT", color: "#FF6B35" },
+  { label: "Rest", color: "#444" },
+  { label: "Recovery", color: "#00BCD4" },
 ];
 
 function getWeatherEmoji(code: number, temp: number) {
-  if (code === 0) return temp > 25 ? "☀️" : "🌤️";
-  if (code <= 2) return "⛅";
-  if (code <= 3) return "☁️";
-  if (code <= 48) return "🌫️";
-  if (code <= 67) return "🌧️";
-  if (code <= 77) return "❄️";
-  if (code <= 82) return "🌧️";
-  if (code <= 86) return "🌨️";
-  if (code <= 99) return "⛈️";
-  return "🌤️";
+  if (code === 0) return temp > 25 ? "☀" : "◑";
+  if (code <= 2) return "◑";
+  if (code <= 3) return "●";
+  if (code <= 48) return "≋";
+  if (code <= 67) return "▼";
+  if (code <= 77) return "❄";
+  if (code <= 82) return "▼";
+  if (code <= 86) return "❄";
+  if (code <= 99) return "↯";
+  return "◑";
 }
 
 export default function Calendar() {
@@ -99,7 +94,7 @@ export default function Calendar() {
   const [schedule, setSchedule] = useState<ShiftSchedule>(DEFAULT_SCHEDULE);
   const [userCity, setUserCity] = useState("London ON");
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [weather, setWeather] = useState<{ [key: string]: { emoji: string; tempMax: number; tempMin: number } }>({});
+  const [weather, setWeather] = useState<{ [key: string]: { icon: string; tempMax: number; tempMin: number } }>({});
   const [loadingWeather, setLoadingWeather] = useState(false);
   const [labels, setLabels] = useState<{ [key: string]: string }>({});
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -153,12 +148,12 @@ export default function Calendar() {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=${coords.tz}&start_date=${startDate}&end_date=${endDate}`;
       const res = await fetch(url);
       const data = await res.json();
-      const weatherMap: { [key: string]: { emoji: string; tempMax: number; tempMin: number } } = {};
+      const weatherMap: { [key: string]: { icon: string; tempMax: number; tempMin: number } } = {};
       data.daily.time.forEach((date: string, i: number) => {
         const code = data.daily.weathercode[i];
         const tempMax = Math.round(data.daily.temperature_2m_max[i]);
         const tempMin = Math.round(data.daily.temperature_2m_min[i]);
-        weatherMap[date] = { emoji: getWeatherEmoji(code, tempMax), tempMax, tempMin };
+        weatherMap[date] = { icon: getWeatherEmoji(code, tempMax), tempMax, tempMin };
       });
       setWeather(weatherMap);
     } catch (e) { console.log(e); }
@@ -207,56 +202,72 @@ export default function Calendar() {
 
   const rows = getRows();
   const monthName = currentMonth.toLocaleString("default", { month: "long", year: "numeric" });
+
   const labelCategories = [
-    { title: "🏃 Running", items: DAY_LABELS.slice(0, 3) },
-    { title: "🏋️ Weight Training", items: DAY_LABELS.slice(3, 16) },
-    { title: "🏅 Cardio & Sports", items: DAY_LABELS.slice(16, 24) },
-    { title: "😴 Rest & Recovery", items: DAY_LABELS.slice(24) },
+    { title: "Running", items: DAY_LABELS.slice(0, 3) },
+    { title: "Strength", items: DAY_LABELS.slice(3, 13) },
+    { title: "Cardio & Sports", items: DAY_LABELS.slice(13, 21) },
+    { title: "Recovery", items: DAY_LABELS.slice(21) },
   ];
 
-  return (
-    <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
+  const uniqueShifts = [...new Map(schedule.shifts.map(s => [s.name, s])).values()];
 
-      <View style={styles.monthNav}>
-        <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
-          <Text style={styles.navBtnText}>‹</Text>
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
-        <View style={styles.monthInfo}>
+        <View style={styles.monthNav}>
+          <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+            <Text style={styles.navBtnText}>‹</Text>
+          </TouchableOpacity>
           <Text style={styles.monthTitle}>{monthName}</Text>
-          <Text style={styles.scheduleName}>{schedule.cycleName} · {schedule.cycleLength}-day · 📍{userCity}</Text>
+          <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+            <Text style={styles.navBtnText}>›</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-          <Text style={styles.navBtnText}>›</Text>
-        </TouchableOpacity>
+        {loadingWeather
+          ? <ActivityIndicator size="small" color="#555" />
+          : <View style={{ width: 40 }} />
+        }
       </View>
 
+      {/* LEGEND */}
       <View style={styles.legend}>
-        {[...new Map(schedule.shifts.map(s => [s.name, s])).values()].map(shift => (
+        {uniqueShifts.map(shift => (
           <View key={shift.id} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: shift.color }]} />
-            <Text style={styles.legendText}>{shift.emoji} {shift.name}</Text>
+            <Text style={styles.legendText}>{shift.name}</Text>
           </View>
         ))}
-        {loadingWeather && <ActivityIndicator size="small" color="#888" />}
+        <Text style={styles.legendSep}>·</Text>
+        <Text style={styles.legendCity}>{userCity}</Text>
       </View>
 
+      {/* CALENDAR */}
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.rowBlock}>
+
+          {/* Day names */}
           <View style={styles.dayNameRow}>
             {row.map((item, colIndex) => {
               const isWeekend = item.date.getDay() === 0 || item.date.getDay() === 6;
               return (
-                <Text key={colIndex} style={[styles.dayName, isWeekend && styles.dayNameWeekend]}>
+                <Text
+                  key={colIndex}
+                  style={[styles.dayName, isWeekend && styles.dayNameWeekend]}
+                >
                   {item.date.toLocaleString("default", { weekday: "short" })}
                 </Text>
               );
             })}
           </View>
 
-          <View style={styles.row}>
+          {/* Tiles */}
+          <View style={styles.tileRow}>
             {row.map((item, colIndex) => {
               const isToday = item.date.toDateString() === today.toDateString();
               const dateKey = formatDateKey(item.date);
@@ -270,7 +281,7 @@ export default function Calendar() {
                   <TouchableOpacity
                     style={[
                       styles.tile,
-                      { backgroundColor: item.shift.color + "CC" },
+                      { borderTopColor: item.shift.color },
                       isToday && styles.todayTile,
                       isPast && styles.pastTile,
                     ]}
@@ -280,19 +291,36 @@ export default function Calendar() {
                     })}
                     onLongPress={() => { setSelectedDate(dateKey); setShowLabelModal(true); }}
                   >
-                    <Text style={styles.dayNum}>{item.date.getDate()}</Text>
-                    <Text style={styles.shiftEmoji}>{item.shift.emoji}</Text>
-                    {weatherData && <Text style={styles.weatherEmoji}>{weatherData.emoji}</Text>}
-                    {weatherData && <Text style={styles.temp}>↑{weatherData.tempMax}° ↓{weatherData.tempMin}°</Text>}
-                    {isToday && <View style={styles.todayDot} />}
+                    {/* Date */}
+                    <Text style={[styles.dayNum, isToday && styles.todayNum]}>
+                      {item.date.getDate()}
+                    </Text>
+
+                    {/* Shift name */}
+                    <Text style={[styles.shiftName, { color: item.shift.color }]}>
+                      {item.shift.name}
+                    </Text>
+
+                    {/* Weather */}
+                    {weatherData && (
+                      <Text style={styles.weatherIcon}>{weatherData.icon}</Text>
+                    )}
+                    {weatherData && (
+                      <Text style={styles.temp}>
+                        {weatherData.tempMax}°
+                      </Text>
+                    )}
                   </TouchableOpacity>
 
+                  {/* Label */}
                   {dayLabel ? (
                     <TouchableOpacity
-                      style={[styles.labelBadge, { backgroundColor: labelData?.color || "#555" }]}
+                      style={[styles.labelBadge, { backgroundColor: labelData?.color + "33" || "#22222255" }]}
                       onPress={() => { setSelectedDate(dateKey); setShowLabelModal(true); }}
                     >
-                      <Text style={styles.labelText}>{dayLabel}</Text>
+                      <Text style={[styles.labelText, { color: labelData?.color || "#888" }]}>
+                        {dayLabel}
+                      </Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
@@ -309,42 +337,46 @@ export default function Calendar() {
         </View>
       ))}
 
+      <View style={{ height: 40 }} />
+
+      {/* LABEL MODAL */}
       {showLabelModal && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Set Day Label</Text>
-            <Text style={styles.modalSubtitle}>{selectedDate}</Text>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Label Day</Text>
+            <Text style={styles.modalDate}>{selectedDate}</Text>
+
             <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.customSection}>
-                <Text style={styles.catTitle}>✏️ Custom</Text>
-                <View style={styles.customRow}>
-                  <TextInput
-                    style={styles.customInput}
-                    placeholder="Type your own label..."
-                    value={customLabel}
-                    onChangeText={setCustomLabel}
-                    placeholderTextColor="#444"
-                    maxLength={20}
-                  />
-                  <TouchableOpacity
-                    style={[styles.customSaveBtn, !customLabel && styles.customSaveBtnDisabled]}
-                    onPress={() => { if (customLabel && selectedDate) saveLabel(selectedDate, customLabel); }}
-                  >
-                    <Text style={styles.customSaveBtnText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
+              {/* Custom input */}
+              <View style={styles.customRow}>
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="Custom label..."
+                  value={customLabel}
+                  onChangeText={setCustomLabel}
+                  placeholderTextColor="#444"
+                  maxLength={20}
+                />
+                <TouchableOpacity
+                  style={[styles.customSaveBtn, !customLabel && { opacity: 0.3 }]}
+                  onPress={() => { if (customLabel && selectedDate) saveLabel(selectedDate, customLabel); }}
+                >
+                  <Text style={styles.customSaveBtnText}>Add</Text>
+                </TouchableOpacity>
               </View>
 
               {labelCategories.map((cat) => (
                 <View key={cat.title}>
-                  <Text style={styles.catTitle}>{cat.title}</Text>
+                  <Text style={styles.catLabel}>{cat.title.toUpperCase()}</Text>
                   <View style={styles.labelGrid}>
                     {cat.items.map((item) => (
                       <TouchableOpacity
                         key={item.label}
-                        style={[styles.labelChip, { backgroundColor: item.color }]}
+                        style={[styles.labelChip, { borderColor: item.color + "55" }]}
                         onPress={() => selectedDate && saveLabel(selectedDate, item.label)}
                       >
+                        <View style={[styles.labelChipDot, { backgroundColor: item.color }]} />
                         <Text style={styles.labelChipText}>{item.label}</Text>
                       </TouchableOpacity>
                     ))}
@@ -352,20 +384,23 @@ export default function Calendar() {
                 </View>
               ))}
 
-              <TouchableOpacity
-                style={styles.clearBtn}
-                onPress={() => {
-                  if (selectedDate) {
-                    const updated = { ...labels };
-                    delete updated[selectedDate];
-                    setLabels(updated);
-                    AsyncStorage.setItem("day_labels", JSON.stringify(updated));
-                    setShowLabelModal(false);
-                  }
-                }}
-              >
-                <Text style={styles.clearBtnText}>🗑️ Remove Label</Text>
-              </TouchableOpacity>
+              {/* Remove */}
+              {labels[selectedDate || ""] && (
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => {
+                    if (selectedDate) {
+                      const updated = { ...labels };
+                      delete updated[selectedDate];
+                      setLabels(updated);
+                      AsyncStorage.setItem("day_labels", JSON.stringify(updated));
+                      setShowLabelModal(false);
+                    }
+                  }}
+                >
+                  <Text style={styles.removeBtnText}>Remove Label</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity style={styles.cancelBtn} onPress={() => { setShowLabelModal(false); setCustomLabel(""); }}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -374,58 +409,60 @@ export default function Calendar() {
           </View>
         </View>
       )}
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#111" },
-  backBtn: { padding: 16, paddingTop: 60 },
-  backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
-  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 8 },
+  container: { flex: 1, backgroundColor: "#0A0A0A" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 64, paddingHorizontal: 24, marginBottom: 16 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#141414", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#1E1E1E" },
+  backText: { fontSize: 24, color: "#fff", fontWeight: "300" },
+  monthNav: { flexDirection: "row", alignItems: "center", gap: 16 },
   navBtn: { padding: 8 },
-  navBtnText: { fontSize: 32, color: "#4A90E2", fontWeight: "bold" },
-  monthInfo: { alignItems: "center", flex: 1 },
-  monthTitle: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  scheduleName: { fontSize: 10, color: "#555", marginTop: 2, textAlign: "center" },
-  legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12, marginBottom: 8, paddingHorizontal: 16 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 11, color: "#888" },
-  rowBlock: { marginBottom: 8, paddingHorizontal: 8 },
-  dayNameRow: { flexDirection: "row", gap: 4, marginBottom: 3 },
-  dayName: { flex: 1, textAlign: "center", fontSize: 10, fontWeight: "bold", color: "#555" },
-  dayNameWeekend: { color: "#FF3B30" },
-  row: { flexDirection: "row", gap: 4 },
-  tileWrapper: { flex: 1, alignItems: "center" },
-  tile: { width: "100%", borderRadius: 12, padding: 5, alignItems: "center", minHeight: 90, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
-  todayTile: { borderWidth: 2, borderColor: "#FFD700" },
-  pastTile: { opacity: 0.5 },
-  dayNum: { color: "#fff", fontWeight: "bold", fontSize: 14 },
-  shiftEmoji: { fontSize: 13, marginTop: 2 },
-  weatherEmoji: { fontSize: 15, marginTop: 2 },
-  temp: { color: "rgba(255,255,255,0.8)", fontSize: 8, marginTop: 1, textAlign: "center" },
-  todayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFD700", marginTop: 2 },
-  labelBadge: { borderRadius: 6, paddingHorizontal: 3, paddingVertical: 2, marginTop: 3, width: "100%", alignItems: "center" },
-  labelText: { color: "#fff", fontSize: 8, fontWeight: "bold" },
-  addLabelBtn: { marginTop: 3, width: "100%", alignItems: "center" },
-  addLabelText: { color: "#333", fontSize: 12 },
-  modalOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.85)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#1a1a1a", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "85%", borderWidth: 1, borderColor: "#333" },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 4, textAlign: "center" },
-  modalSubtitle: { fontSize: 13, color: "#666", textAlign: "center", marginBottom: 12 },
-  customSection: { backgroundColor: "#222", borderRadius: 12, padding: 12, marginBottom: 8 },
-  customRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  customInput: { flex: 1, borderWidth: 1, borderColor: "#333", borderRadius: 10, padding: 10, fontSize: 14, color: "#fff", backgroundColor: "#111" },
-  customSaveBtn: { backgroundColor: "#4A90E2", borderRadius: 10, padding: 10, paddingHorizontal: 16 },
-  customSaveBtnDisabled: { backgroundColor: "#333" },
-  customSaveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
-  catTitle: { fontSize: 13, fontWeight: "bold", color: "#888", marginBottom: 8, marginTop: 12 },
+  navBtnText: { fontSize: 22, color: "#4A90E2", fontWeight: "300" },
+  monthTitle: { fontSize: 17, fontWeight: "600", color: "#fff", minWidth: 160, textAlign: "center" },
+  legend: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingHorizontal: 24, marginBottom: 16 },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  legendDot: { width: 6, height: 6, borderRadius: 3 },
+  legendText: { fontSize: 12, color: "#666" },
+  legendSep: { color: "#333", fontSize: 12 },
+  legendCity: { fontSize: 12, color: "#444" },
+  rowBlock: { marginBottom: 4, paddingHorizontal: 12 },
+  dayNameRow: { flexDirection: "row", gap: 3, marginBottom: 3, paddingHorizontal: 2 },
+  dayName: { flex: 1, textAlign: "center", fontSize: 9, fontWeight: "600", color: "#444", letterSpacing: 0.5 },
+  dayNameWeekend: { color: "#FF453A" },
+  tileRow: { flexDirection: "row", gap: 3 },
+  tileWrapper: { flex: 1 },
+  tile: { backgroundColor: "#141414", borderRadius: 10, padding: 6, alignItems: "center", minHeight: 80, borderWidth: 1, borderColor: "#1E1E1E", borderTopWidth: 2 },
+  todayTile: { backgroundColor: "#1a1a2a", borderColor: "#4A90E2" },
+  pastTile: { opacity: 0.4 },
+  dayNum: { fontSize: 14, fontWeight: "600", color: "#fff", marginBottom: 2 },
+  todayNum: { color: "#4A90E2" },
+  shiftName: { fontSize: 8, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 3 },
+  weatherIcon: { fontSize: 12, color: "#888", marginBottom: 1 },
+  temp: { fontSize: 10, color: "#666" },
+  labelBadge: { borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, marginTop: 3, alignItems: "center" },
+  labelText: { fontSize: 8, fontWeight: "600" },
+  addLabelBtn: { marginTop: 3, alignItems: "center" },
+  addLabelText: { fontSize: 14, color: "#2a2a2a" },
+  modalOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
+  modalSheet: { backgroundColor: "#141414", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "85%", borderWidth: 1, borderColor: "#1E1E1E" },
+  modalHandle: { width: 36, height: 4, backgroundColor: "#333", borderRadius: 2, alignSelf: "center", marginBottom: 20 },
+  modalTitle: { fontSize: 18, fontWeight: "600", color: "#fff", marginBottom: 4 },
+  modalDate: { fontSize: 13, color: "#555", marginBottom: 20 },
+  customRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
+  customInput: { flex: 1, backgroundColor: "#0A0A0A", borderWidth: 1, borderColor: "#1E1E1E", borderRadius: 12, padding: 12, fontSize: 15, color: "#fff" },
+  customSaveBtn: { backgroundColor: "#4A90E2", borderRadius: 12, paddingHorizontal: 16, justifyContent: "center" },
+  customSaveBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  catLabel: { fontSize: 11, fontWeight: "700", color: "#444", letterSpacing: 1.5, marginBottom: 8, marginTop: 16 },
   labelGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  labelChip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  labelChipText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-  clearBtn: { padding: 16, alignItems: "center", marginTop: 8 },
-  clearBtnText: { fontSize: 15, color: "#FF3B30", fontWeight: "bold" },
-  cancelBtn: { padding: 16, alignItems: "center" },
-  cancelBtnText: { fontSize: 15, color: "#666" },
+  labelChip: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: "#0A0A0A" },
+  labelChipDot: { width: 6, height: 6, borderRadius: 3 },
+  labelChipText: { color: "#888", fontSize: 13 },
+  removeBtn: { marginTop: 20, padding: 14, alignItems: "center" },
+  removeBtnText: { color: "#FF453A", fontSize: 15 },
+  cancelBtn: { padding: 14, alignItems: "center" },
+  cancelBtnText: { color: "#555", fontSize: 15 },
 });

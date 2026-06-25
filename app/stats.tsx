@@ -14,6 +14,8 @@ type DayData = {
   water: number;
   foodCal: number;
   burnedCal: number;
+  steps: number;
+  heartRate: number;
 };
 
 const MOOD_SCORES: { [key: string]: number } = {
@@ -36,206 +38,250 @@ function calculateShiftScore(data: DayData): number {
 }
 
 function getScoreInfo(score: number) {
-  if (score >= 80) return { label: "EXCELLENT", color: "#4CAF50", rpm: "High Performance", zone: "Green Zone" };
-  if (score >= 60) return { label: "GOOD", color: "#8BC34A", rpm: "Cruising Speed", zone: "Green-Yellow Zone" };
-  if (score >= 40) return { label: "MODERATE", color: "#FF9500", rpm: "Mid Range", zone: "Yellow Zone" };
-  if (score >= 20) return { label: "TOUGH", color: "#FF5722", rpm: "Low Power", zone: "Orange Zone" };
-  return { label: "CRITICAL", color: "#F44336", rpm: "Redline Warning", zone: "Red Zone" };
+  if (score >= 80) return { label: "EXCELLENT", color: "#30D158" };
+  if (score >= 60) return { label: "GOOD", color: "#4A90E2" };
+  if (score >= 40) return { label: "MODERATE", color: "#FF9F0A" };
+  if (score >= 20) return { label: "TOUGH", color: "#FF6B35" };
+  return { label: "CRITICAL", color: "#FF453A" };
 }
 
-function RPMMeter({ score, color }: { score: number; color: string }) {
-  const size = width - 48;
+function WatchFace({ score, data, color }: { score: number; data: DayData; color: string }) {
+  const size = width - 64;
   const cx = size / 2;
-  const cy = size * 0.55;
-  const r = size * 0.4;
-  const strokeWidth = size * 0.06;
+  const cy = size / 2;
+  const outerR = size * 0.44;
+  const arcR = size * 0.38;
+  const strokeW = size * 0.028;
 
-  const minAngle = -210;
-  const maxAngle = 30;
-  const angle = minAngle + (score / 100) * (maxAngle - minAngle);
-  const angleRad = (angle * Math.PI) / 180;
+  // Arc from -220 to 40 degrees
+  const minAngle = -220;
+  const maxAngle = 40;
+  const scoreAngle = minAngle + (score / 100) * (maxAngle - minAngle);
 
-  function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-    const rad = (angleDeg * Math.PI) / 180;
+  function polar(r: number, deg: number) {
+    const rad = (deg * Math.PI) / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
   }
 
-  function arcPath(startAngle: number, endAngle: number, radius: number) {
-    const start = polarToCartesian(cx, cy, radius, startAngle);
-    const end = polarToCartesian(cx, cy, radius, endAngle);
-    const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
-    return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+  function arcPath(r: number, start: number, end: number) {
+    const s = polar(r, start);
+    const e = polar(r, end);
+    const large = Math.abs(end - start) > 180 ? 1 : 0;
+    return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
   }
 
-  const zones = [
-    { start: -210, end: -168, color: "#1a1a2e" },
-    { start: -168, end: -126, color: "#16213e" },
-    { start: -126, end: -84, color: "#0f3460" },
-    { start: -84, end: -42, color: "#533483" },
-    { start: -42, end: 0, color: "#e94560" },
-    { start: 0, end: 30, color: "#FF0000" },
-  ];
-
-  const ticks = [
-    { val: 0, label: "0" },
-    { val: 20, label: "2" },
-    { val: 40, label: "4" },
-    { val: 60, label: "6" },
-    { val: 80, label: "8" },
-    { val: 100, label: "10" },
-  ];
-
-  const miniTicks = [10, 30, 50, 70, 90];
-
-  const needleLength = r * 0.82;
-  const needleX = cx + needleLength * Math.cos(angleRad);
-  const needleY = cy + needleLength * Math.sin(angleRad);
+  // Tick marks
+  const majorTicks = [-220, -176, -132, -88, -44, 0, 40];
+  const minorTicks = [-198, -154, -110, -66, -22, 20];
 
   return (
-    <Svg width={size} height={size * 0.7}>
-      {/* Dark background circle */}
-      <Circle cx={cx} cy={cy} r={r + strokeWidth} fill="#1a1a1a" />
+    <Svg width={size} height={size}>
+      {/* Outer ring */}
+      <Circle cx={cx} cy={cy} r={outerR} fill="none" stroke="#1a1a1a" strokeWidth={1} />
 
-      {/* Zone arcs */}
-      {zones.map((zone, i) => (
-        <Path
-          key={i}
-          d={arcPath(zone.start, zone.end, r)}
-          stroke={zone.color}
-          strokeWidth={strokeWidth * 0.9}
-          fill="none"
-        />
-      ))}
-
-      {/* Active progress glow */}
+      {/* Track */}
       <Path
-        d={arcPath(minAngle, angle, r)}
+        d={arcPath(arcR, minAngle, maxAngle)}
+        stroke="#1E1E1E"
+        strokeWidth={strokeW}
+        fill="none"
+        strokeLinecap="round"
+      />
+
+      {/* Score arc */}
+      <Path
+        d={arcPath(arcR, minAngle, scoreAngle)}
         stroke={color}
-        strokeWidth={strokeWidth * 0.5}
+        strokeWidth={strokeW}
         fill="none"
         strokeLinecap="round"
         opacity={0.9}
       />
 
-      {/* Major tick marks + labels */}
-      {ticks.map((tick) => {
-        const tickAngle = minAngle + (tick.val / 100) * (maxAngle - minAngle);
-        const tickRad = (tickAngle * Math.PI) / 180;
-        const innerR = r - strokeWidth * 1.1;
-        const outerR = r + strokeWidth * 0.2;
-        const labelR = r - strokeWidth * 1.9;
-        const x1 = cx + outerR * Math.cos(tickRad);
-        const y1 = cy + outerR * Math.sin(tickRad);
-        const x2 = cx + innerR * Math.cos(tickRad);
-        const y2 = cy + innerR * Math.sin(tickRad);
-        const lx = cx + labelR * Math.cos(tickRad);
-        const ly = cy + labelR * Math.sin(tickRad);
+      {/* Major ticks */}
+      {majorTicks.map((deg, i) => {
+        const inner = polar(arcR - strokeW * 1.2, deg);
+        const outer2 = polar(arcR + strokeW * 0.4, deg);
+        const label = polar(arcR - strokeW * 2.2, deg);
+        const labels = ["0", "2", "4", "6", "8", "9", "10"];
         return (
-          <G key={tick.val}>
-            <Line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth={2.5} />
-            <SvgText x={lx} y={ly + 4} textAnchor="middle" fontSize={size * 0.038} fill="#fff" fontWeight="bold">
-              {tick.label}
+          <G key={i}>
+            <Line
+              x1={outer2.x} y1={outer2.y}
+              x2={inner.x} y2={inner.y}
+              stroke="#333" strokeWidth={1.5}
+            />
+            <SvgText
+              x={label.x} y={label.y + 4}
+              textAnchor="middle"
+              fontSize={size * 0.03}
+              fill="#333"
+            >
+              {labels[i]}
             </SvgText>
           </G>
         );
       })}
 
-      {/* Minor tick marks */}
-      {miniTicks.map((tick) => {
-        const tickAngle = minAngle + (tick / 100) * (maxAngle - minAngle);
-        const tickRad = (tickAngle * Math.PI) / 180;
-        const innerR = r - strokeWidth * 0.7;
-        const outerR = r + strokeWidth * 0.1;
-        const x1 = cx + outerR * Math.cos(tickRad);
-        const y1 = cy + outerR * Math.sin(tickRad);
-        const x2 = cx + innerR * Math.cos(tickRad);
-        const y2 = cy + innerR * Math.sin(tickRad);
+      {/* Minor ticks */}
+      {minorTicks.map((deg, i) => {
+        const inner = polar(arcR - strokeW * 0.8, deg);
+        const outer2 = polar(arcR + strokeW * 0.2, deg);
         return (
-          <Line key={tick} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#888" strokeWidth={1.5} />
+          <Line
+            key={i}
+            x1={outer2.x} y1={outer2.y}
+            x2={inner.x} y2={inner.y}
+            stroke="#222" strokeWidth={1}
+          />
         );
       })}
 
-      {/* Needle shadow */}
-      <Line
-        x1={cx + 3}
-        y1={cy + 3}
-        x2={needleX + 3}
-        y2={needleY + 3}
-        stroke="rgba(0,0,0,0.3)"
-        strokeWidth={size * 0.012}
-        strokeLinecap="round"
-      />
+      {/* Center circle */}
+      <Circle cx={cx} cy={cy} r={arcR * 0.68} fill="#0D0D0D" />
+      <Circle cx={cx} cy={cy} r={arcR * 0.67} fill="none" stroke="#1a1a1a" strokeWidth={1} />
 
-      {/* Needle */}
-      <Line
-        x1={cx}
-        y1={cy}
-        x2={needleX}
-        y2={needleY}
-        stroke="#fff"
-        strokeWidth={size * 0.012}
-        strokeLinecap="round"
-      />
-
-      {/* Red tip of needle */}
-      <Line
-        x1={cx}
-        y1={cy}
-        x2={cx + (needleLength * 0.3) * Math.cos(angleRad)}
-        y2={cy + (needleLength * 0.3) * Math.sin(angleRad)}
-        stroke="#FF0000"
-        strokeWidth={size * 0.014}
-        strokeLinecap="round"
-      />
-
-      {/* Center hub */}
-      <Circle cx={cx} cy={cy} r={size * 0.045} fill="#333" />
-      <Circle cx={cx} cy={cy} r={size * 0.028} fill="#555" />
-      <Circle cx={cx} cy={cy} r={size * 0.012} fill="#FF0000" />
-
-      {/* RPM label */}
+      {/* SCORE — large center */}
       <SvgText
-        x={cx}
-        y={cy - r * 0.3}
+        x={cx} y={cy - size * 0.06}
         textAnchor="middle"
-        fontSize={size * 0.04}
-        fill="#888"
-        fontWeight="bold"
-      >
-        SHIFT SCORE x10
-      </SvgText>
-
-      {/* Score number display */}
-      <SvgText
-        x={cx}
-        y={cy + r * 0.25}
-        textAnchor="middle"
-        fontSize={size * 0.16}
+        fontSize={size * 0.2}
         fontWeight="bold"
         fill={color}
+        opacity={0.95}
       >
         {score}
       </SvgText>
+
+      {/* /100 */}
+      <SvgText
+        x={cx} y={cy + size * 0.06}
+        textAnchor="middle"
+        fontSize={size * 0.035}
+        fill="#333"
+        letterSpacing={2}
+      >
+        / 100
+      </SvgText>
+
+      {/* TOP — Steps */}
+      <SvgText
+        x={cx} y={cy - arcR * 0.55}
+        textAnchor="middle"
+        fontSize={size * 0.028}
+        fill="#444"
+        letterSpacing={2}
+      >
+        STEPS
+      </SvgText>
+      <SvgText
+        x={cx} y={cy - arcR * 0.38}
+        textAnchor="middle"
+        fontSize={size * 0.055}
+        fontWeight="bold"
+        fill={data.steps > 0 ? "#fff" : "#222"}
+      >
+        {data.steps > 0 ? data.steps.toLocaleString() : "—"}
+      </SvgText>
+
+      {/* BOTTOM LEFT — Heart Rate */}
+      <SvgText
+        x={cx - arcR * 0.5}
+        y={cy + arcR * 0.45}
+        textAnchor="middle"
+        fontSize={size * 0.026}
+        fill="#444"
+        letterSpacing={1}
+      >
+        HR
+      </SvgText>
+      <SvgText
+        x={cx - arcR * 0.5}
+        y={cy + arcR * 0.62}
+        textAnchor="middle"
+        fontSize={size * 0.052}
+        fontWeight="bold"
+        fill={data.heartRate > 0 ? "#FF453A" : "#222"}
+      >
+        {data.heartRate > 0 ? data.heartRate : "—"}
+      </SvgText>
+      <SvgText
+        x={cx - arcR * 0.5}
+        y={cy + arcR * 0.74}
+        textAnchor="middle"
+        fontSize={size * 0.024}
+        fill="#333"
+      >
+        bpm
+      </SvgText>
+
+      {/* BOTTOM RIGHT — Sleep */}
+      <SvgText
+        x={cx + arcR * 0.5}
+        y={cy + arcR * 0.45}
+        textAnchor="middle"
+        fontSize={size * 0.026}
+        fill="#444"
+        letterSpacing={1}
+      >
+        SLEEP
+      </SvgText>
+      <SvgText
+        x={cx + arcR * 0.5}
+        y={cy + arcR * 0.62}
+        textAnchor="middle"
+        fontSize={size * 0.052}
+        fontWeight="bold"
+        fill={data.sleep > 0 ? "#4A90E2" : "#222"}
+      >
+        {data.sleep > 0 ? data.sleep : "—"}
+      </SvgText>
+      <SvgText
+        x={cx + arcR * 0.5}
+        y={cy + arcR * 0.74}
+        textAnchor="middle"
+        fontSize={size * 0.024}
+        fill="#333"
+      >
+        hrs
+      </SvgText>
+
+      {/* Dot indicator at score position */}
+      {score > 0 && (
+        <Circle
+          cx={polar(arcR, scoreAngle).x}
+          cy={polar(arcR, scoreAngle).y}
+          r={strokeW * 0.9}
+          fill={color}
+        />
+      )}
     </Svg>
   );
 }
 
 export default function Stats() {
   const router = useRouter();
-  const [todayData, setTodayData] = useState<DayData | null>(null);
+  const [todayData, setTodayData] = useState<DayData>({
+    date: "",
+    sleep: 0,
+    mood: "",
+    energy: 0,
+    water: 0,
+    foodCal: 0,
+    burnedCal: 0,
+    steps: 0,
+    heartRate: 0,
+  });
   const [weekData, setWeekData] = useState<{ data: DayData; score: number }[]>([]);
   const [todayScore, setTodayScore] = useState(0);
   const [showExplainer, setShowExplainer] = useState(false);
 
   useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [])
+    useCallback(() => { loadData(); }, [])
   );
 
   async function loadData() {
-    const today = new Date();
-    const todayKey = today.toISOString().split("T")[0];
+    const todayKey = new Date().toISOString().split("T")[0];
     try {
       const health = await AsyncStorage.getItem(`health_${todayKey}`);
       const food = await AsyncStorage.getItem(`food_${todayKey}`);
@@ -253,6 +299,8 @@ export default function Stats() {
         water: hd.water || 0,
         foodCal,
         burnedCal,
+        steps: hd.steps || 0,
+        heartRate: hd.heartRate || 0,
       };
       setTodayData(data);
       setTodayScore(calculateShiftScore(data));
@@ -277,6 +325,8 @@ export default function Stats() {
             water: hd2.water || 0,
             foodCal: fd2.reduce((s: number, x: any) => s + (x.calories || 0), 0),
             burnedCal: wd2.reduce((s: number, x: any) => s + (parseInt(x.calories) || 0), 0),
+            steps: hd2.steps || 0,
+            heartRate: hd2.heartRate || 0,
           };
           week.push({ data: dayData, score: calculateShiftScore(dayData) });
         }
@@ -286,192 +336,158 @@ export default function Stats() {
   }
 
   const scoreInfo = getScoreInfo(todayScore);
+  const today = new Date().toLocaleDateString("en-CA", {
+    weekday: "long", month: "long", day: "numeric"
+  });
 
   return (
-    <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-      <Text style={styles.title}>📊 Shift Score</Text>
-      <Text style={styles.subtitle}>
-        {new Date().toLocaleDateString("default", { weekday: "long", month: "long", day: "numeric" })}
-      </Text>
-
-      {/* RPM GAUGE */}
-      <TouchableOpacity
-        style={styles.gaugeCard}
-        onPress={() => setShowExplainer(true)}
-        activeOpacity={0.9}
-      >
-        <RPMMeter score={todayScore} color={scoreInfo.color} />
-        <Text style={[styles.scoreLabel, { color: scoreInfo.color }]}>{scoreInfo.label}</Text>
-        <Text style={styles.rpmLabel}>{scoreInfo.rpm}</Text>
-        <Text style={styles.zoneLabel}>{scoreInfo.zone}</Text>
-        <Text style={styles.tapHint}>Tap to understand your score ⓘ</Text>
-      </TouchableOpacity>
-
-      {/* TODAY BREAKDOWN */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today's Breakdown</Text>
-
-        {todayScore > 0 && todayData ? (
-          <View style={styles.breakdownGrid}>
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>😴</Text>
-              <Text style={styles.breakdownValue}>{todayData.sleep > 0 ? `${todayData.sleep}h` : "—"}</Text>
-              <Text style={styles.breakdownLabel}>Sleep</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${Math.min((todayData.sleep / 8) * 100, 100)}%` as any,
-                  backgroundColor: todayData.sleep >= 7 ? "#4CAF50" : "#FF9500"
-                }]} />
-              </View>
-            </View>
-
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>⚡</Text>
-              <Text style={styles.breakdownValue}>{todayData.energy > 0 ? `${todayData.energy}/10` : "—"}</Text>
-              <Text style={styles.breakdownLabel}>Energy</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${(todayData.energy / 10) * 100}%` as any,
-                  backgroundColor: "#FF9500"
-                }]} />
-              </View>
-            </View>
-
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>💧</Text>
-              <Text style={styles.breakdownValue}>{todayData.water > 0 ? `${todayData.water}/8` : "—"}</Text>
-              <Text style={styles.breakdownLabel}>Water</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${Math.min((todayData.water / 8) * 100, 100)}%` as any,
-                  backgroundColor: "#4A90E2"
-                }]} />
-              </View>
-            </View>
-
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>😊</Text>
-              <Text style={styles.breakdownValue}>{todayData.mood || "—"}</Text>
-              <Text style={styles.breakdownLabel}>Mood</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${MOOD_SCORES[todayData.mood] || 0}%` as any,
-                  backgroundColor: "#7B68EE"
-                }]} />
-              </View>
-            </View>
-
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>🍎</Text>
-              <Text style={styles.breakdownValue}>{todayData.foodCal > 0 ? todayData.foodCal : "—"}</Text>
-              <Text style={styles.breakdownLabel}>Cal In</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${Math.min((todayData.foodCal / 2000) * 100, 100)}%` as any,
-                  backgroundColor: "#4CAF50"
-                }]} />
-              </View>
-            </View>
-
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownEmoji}>🔥</Text>
-              <Text style={styles.breakdownValue}>{todayData.burnedCal > 0 ? todayData.burnedCal : "—"}</Text>
-              <Text style={styles.breakdownLabel}>Cal Burned</Text>
-              <View style={styles.breakdownBar}>
-                <View style={[styles.breakdownFill, {
-                  width: `${Math.min((todayData.burnedCal / 500) * 100, 100)}%` as any,
-                  backgroundColor: "#FF5722"
-                }]} />
-              </View>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📊</Text>
-            <Text style={styles.emptyText}>No data yet today!</Text>
-            <Text style={styles.emptyDesc}>Log health, food and activity to see your score</Text>
-          </View>
-        )}
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Shift Score</Text>
+        <TouchableOpacity onPress={() => setShowExplainer(true)} style={styles.infoBtn}>
+          <Text style={styles.infoBtnText}>i</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* 7 DAY HISTORY */}
+      <Text style={styles.dateText}>{today}</Text>
+
+      {/* WATCH FACE */}
+      <View style={styles.watchCard}>
+        <WatchFace score={todayScore} data={todayData} color={scoreInfo.color} />
+        <Text style={[styles.scoreLabel, { color: scoreInfo.color }]}>
+          {scoreInfo.label}
+        </Text>
+      </View>
+
+      {/* DATA STRIP */}
+      <View style={styles.dataStrip}>
+        <View style={styles.dataItem}>
+          <Text style={styles.dataValue}>
+            {todayData.energy > 0 ? `${todayData.energy}/10` : "—"}
+          </Text>
+          <Text style={styles.dataLabel}>ENERGY</Text>
+        </View>
+        <View style={styles.dataDivider} />
+        <View style={styles.dataItem}>
+          <Text style={styles.dataValue}>
+            {todayData.water > 0 ? `${todayData.water}/8` : "—"}
+          </Text>
+          <Text style={styles.dataLabel}>WATER</Text>
+        </View>
+        <View style={styles.dataDivider} />
+        <View style={styles.dataItem}>
+          <Text style={styles.dataValue}>
+            {todayData.mood || "—"}
+          </Text>
+          <Text style={styles.dataLabel}>MOOD</Text>
+        </View>
+        <View style={styles.dataDivider} />
+        <View style={styles.dataItem}>
+          <Text style={[styles.dataValue, {
+            color: todayData.foodCal - todayData.burnedCal < 0 ? "#30D158" :
+              todayData.foodCal - todayData.burnedCal > 500 ? "#FF453A" : "#FF9F0A"
+          }]}>
+            {todayData.foodCal > 0 || todayData.burnedCal > 0
+              ? `${todayData.foodCal - todayData.burnedCal > 0 ? "+" : ""}${todayData.foodCal - todayData.burnedCal}`
+              : "—"}
+          </Text>
+          <Text style={styles.dataLabel}>NET CAL</Text>
+        </View>
+      </View>
+
+      {/* 7-DAY HISTORY */}
       {weekData.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📅 7-Day History</Text>
+          <Text style={styles.sectionLabel}>LAST 7 DAYS</Text>
           {weekData.map((item, i) => {
             const info = getScoreInfo(item.score);
             return (
               <View key={i} style={styles.historyRow}>
                 <Text style={styles.historyDate}>{item.data.date}</Text>
-                <View style={styles.historyBarContainer}>
-                  <View style={[styles.historyBar, {
+                <View style={styles.historyBarBg}>
+                  <View style={[styles.historyBarFill, {
                     width: `${item.score}%` as any,
                     backgroundColor: info.color
                   }]} />
                 </View>
-                <Text style={[styles.historyScore, { color: info.color }]}>{item.score}</Text>
+                <Text style={[styles.historyScore, { color: info.color }]}>
+                  {item.score}
+                </Text>
               </View>
             );
           })}
         </View>
       )}
 
-      <View style={{ height: 40 }} />
+      {/* EMPTY STATE */}
+      {todayScore === 0 && (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>No data logged yet</Text>
+          <Text style={styles.emptyDesc}>
+            Log health data from the day view to see your score
+          </Text>
+        </View>
+      )}
+
+      <View style={{ height: 50 }} />
 
       {/* EXPLAINER MODAL */}
       <Modal visible={showExplainer} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>📊 How Shift Score Works</Text>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>How It Works</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
+
               <Text style={styles.modalDesc}>
-                Your Shift Score is like an RPM meter for your body — it shows how well your engine is running today based on your health data.
+                Your Shift Score is calculated from your daily health data — like a performance gauge for your body.
               </Text>
 
-              <View style={styles.explainerRow}>
-                <Text style={[styles.explainerZone, { color: "#4CAF50" }]}>● Green Zone (80-100)</Text>
-                <Text style={styles.explainerDesc}>Peak performance — your body is running at its best</Text>
-              </View>
-              <View style={styles.explainerRow}>
-                <Text style={[styles.explainerZone, { color: "#8BC34A" }]}>● Yellow-Green (60-79)</Text>
-                <Text style={styles.explainerDesc}>Good condition — cruising comfortably</Text>
-              </View>
-              <View style={styles.explainerRow}>
-                <Text style={[styles.explainerZone, { color: "#FF9500" }]}>● Yellow Zone (40-59)</Text>
-                <Text style={styles.explainerDesc}>Moderate — some areas need attention</Text>
-              </View>
-              <View style={styles.explainerRow}>
-                <Text style={[styles.explainerZone, { color: "#FF5722" }]}>● Orange Zone (20-39)</Text>
-                <Text style={styles.explainerDesc}>Low power — rest and recovery recommended</Text>
-              </View>
-              <View style={styles.explainerRow}>
-                <Text style={[styles.explainerZone, { color: "#F44336" }]}>● Red Zone (0-19)</Text>
-                <Text style={styles.explainerDesc}>Critical — your body needs urgent recovery</Text>
-              </View>
+              <Text style={styles.modalSectionLabel}>ZONES</Text>
+              {[
+                { range: "80 – 100", label: "Excellent", color: "#30D158" },
+                { range: "60 – 79", label: "Good", color: "#4A90E2" },
+                { range: "40 – 59", label: "Moderate", color: "#FF9F0A" },
+                { range: "20 – 39", label: "Tough", color: "#FF6B35" },
+                { range: "0 – 19", label: "Critical", color: "#FF453A" },
+              ].map((zone, i) => (
+                <View key={i} style={styles.zoneRow}>
+                  <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
+                  <Text style={styles.zoneRange}>{zone.range}</Text>
+                  <Text style={[styles.zoneLabel2, { color: zone.color }]}>{zone.label}</Text>
+                </View>
+              ))}
 
-              <Text style={styles.modalSubtitle}>What affects your score?</Text>
-              <Text style={styles.modalFactors}>
-                😴 Sleep quality and duration{"\n"}
-                😊 Daily mood{"\n"}
-                ⚡ Energy level{"\n"}
-                💧 Water intake{"\n"}
-                🍎 Calorie balance (food vs burned)
-              </Text>
+              <Text style={styles.modalSectionLabel}>INPUTS</Text>
+              {[
+                { label: "Sleep", sub: "Hours and quality" },
+                { label: "Mood", sub: "Daily feeling" },
+                { label: "Energy", sub: "Level 1–10" },
+                { label: "Water", sub: "Glasses per day" },
+                { label: "Calories", sub: "Food vs burned" },
+              ].map((f, i) => (
+                <View key={i} style={styles.inputRow}>
+                  <View style={styles.inputDot} />
+                  <View>
+                    <Text style={styles.inputLabel}>{f.label}</Text>
+                    <Text style={styles.inputSub}>{f.sub}</Text>
+                  </View>
+                </View>
+              ))}
 
               <Text style={styles.modalNote}>
-                As Fitbit sync is added, your score will also include heart rate, steps, and HRV for an even more accurate reading!!
+                Fitbit sync coming soon. Steps, heart rate and HRV will auto-populate the gauge.
               </Text>
 
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                onPress={() => setShowExplainer(false)}
-              >
-                <Text style={styles.modalCloseBtnText}>Got it! 👍</Text>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setShowExplainer(false)}>
+                <Text style={styles.closeBtnText}>Close</Text>
               </TouchableOpacity>
+
             </ScrollView>
           </View>
         </View>
@@ -482,44 +498,46 @@ export default function Stats() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#111" },
-  backBtn: { padding: 16, paddingTop: 60 },
-  backText: { fontSize: 16, color: "#4A90E2", fontWeight: "bold" },
-  title: { fontSize: 28, fontWeight: "bold", color: "#fff", textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#888", textAlign: "center", marginBottom: 16 },
-  gaugeCard: { backgroundColor: "#1a1a1a", margin: 16, borderRadius: 20, padding: 20, alignItems: "center", borderWidth: 1, borderColor: "#333" },
-  scoreLabel: { fontSize: 26, fontWeight: "bold", marginTop: 8, letterSpacing: 4 },
-  rpmLabel: { fontSize: 14, color: "#888", marginTop: 4 },
-  zoneLabel: { fontSize: 12, color: "#555", marginTop: 2 },
-  tapHint: { fontSize: 11, color: "#444", marginTop: 12 },
-  section: { backgroundColor: "#1a1a1a", margin: 16, marginTop: 0, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#333" },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#fff", marginBottom: 16 },
-  breakdownGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  breakdownItem: { width: "47%", backgroundColor: "#222", borderRadius: 12, padding: 12 },
-  breakdownEmoji: { fontSize: 22, marginBottom: 4 },
-  breakdownValue: { fontSize: 18, fontWeight: "bold", color: "#fff" },
-  breakdownLabel: { fontSize: 12, color: "#666", marginBottom: 8 },
-  breakdownBar: { height: 4, backgroundColor: "#333", borderRadius: 2, overflow: "hidden" },
-  breakdownFill: { height: "100%", borderRadius: 2 },
-  emptyState: { alignItems: "center", padding: 20 },
-  emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 18, fontWeight: "bold", color: "#fff" },
-  emptyDesc: { fontSize: 13, color: "#666", textAlign: "center", marginTop: 8 },
-  historyRow: { flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 8 },
-  historyDate: { fontSize: 11, color: "#666", width: 80 },
-  historyBarContainer: { flex: 1, height: 10, backgroundColor: "#333", borderRadius: 5, overflow: "hidden" },
-  historyBar: { height: "100%", borderRadius: 5 },
-  historyScore: { fontSize: 14, fontWeight: "bold", width: 30, textAlign: "right" },
+  container: { flex: 1, backgroundColor: "#0A0A0A" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 64, paddingHorizontal: 24, marginBottom: 8 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#141414", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#1E1E1E" },
+  backText: { fontSize: 24, color: "#fff", fontWeight: "300" },
+  title: { fontSize: 18, fontWeight: "600", color: "#fff" },
+  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#141414", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#1E1E1E" },
+  infoBtnText: { fontSize: 15, color: "#555", fontWeight: "600", fontStyle: "italic" },
+  dateText: { fontSize: 12, color: "#333", paddingHorizontal: 24, marginBottom: 16, letterSpacing: 0.5 },
+  watchCard: { backgroundColor: "#0D0D0D", marginHorizontal: 16, borderRadius: 24, padding: 24, alignItems: "center", borderWidth: 1, borderColor: "#1a1a1a", marginBottom: 12 },
+  scoreLabel: { fontSize: 13, fontWeight: "700", letterSpacing: 4, marginTop: 8 },
+  dataStrip: { flexDirection: "row", backgroundColor: "#141414", marginHorizontal: 16, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#1E1E1E", marginBottom: 12 },
+  dataItem: { flex: 1, alignItems: "center" },
+  dataDivider: { width: 1, backgroundColor: "#1E1E1E" },
+  dataValue: { fontSize: 15, fontWeight: "600", color: "#fff", marginBottom: 4 },
+  dataLabel: { fontSize: 9, color: "#333", letterSpacing: 1.5 },
+  section: { backgroundColor: "#141414", marginHorizontal: 16, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#1E1E1E", marginBottom: 12 },
+  sectionLabel: { fontSize: 11, fontWeight: "700", color: "#333", letterSpacing: 1.5, marginBottom: 16 },
+  historyRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
+  historyDate: { fontSize: 11, color: "#333", width: 84 },
+  historyBarBg: { flex: 1, height: 3, backgroundColor: "#1A1A1A", borderRadius: 2, overflow: "hidden" },
+  historyBarFill: { height: "100%", borderRadius: 2 },
+  historyScore: { fontSize: 13, fontWeight: "600", width: 28, textAlign: "right" },
+  emptyCard: { backgroundColor: "#141414", marginHorizontal: 16, borderRadius: 16, padding: 32, alignItems: "center", borderWidth: 1, borderColor: "#1E1E1E" },
+  emptyTitle: { fontSize: 16, fontWeight: "600", color: "#333", marginBottom: 8 },
+  emptyDesc: { fontSize: 13, color: "#2a2a2a", textAlign: "center", lineHeight: 20 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#1a1a1a", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "85%", borderWidth: 1, borderColor: "#333" },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 16, textAlign: "center" },
-  modalDesc: { fontSize: 14, color: "#888", lineHeight: 22, marginBottom: 20 },
-  explainerRow: { marginBottom: 12 },
-  explainerZone: { fontSize: 15, fontWeight: "bold", marginBottom: 4 },
-  explainerDesc: { fontSize: 13, color: "#666", paddingLeft: 16 },
-  modalSubtitle: { fontSize: 16, fontWeight: "bold", color: "#fff", marginTop: 20, marginBottom: 12 },
-  modalFactors: { fontSize: 14, color: "#888", lineHeight: 28 },
-  modalNote: { fontSize: 13, color: "#555", marginTop: 20, fontStyle: "italic", lineHeight: 20 },
-  modalCloseBtn: { backgroundColor: "#4A90E2", borderRadius: 12, padding: 16, alignItems: "center", marginTop: 20 },
-  modalCloseBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  modalSheet: { backgroundColor: "#141414", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "80%", borderWidth: 1, borderColor: "#1E1E1E" },
+  modalHandle: { width: 36, height: 4, backgroundColor: "#222", borderRadius: 2, alignSelf: "center", marginBottom: 20 },
+  modalTitle: { fontSize: 18, fontWeight: "600", color: "#fff", marginBottom: 16 },
+  modalDesc: { fontSize: 14, color: "#444", lineHeight: 22, marginBottom: 20 },
+  modalSectionLabel: { fontSize: 10, fontWeight: "700", color: "#333", letterSpacing: 2, marginBottom: 12, marginTop: 8 },
+  zoneRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  zoneDot: { width: 6, height: 6, borderRadius: 3 },
+  zoneRange: { fontSize: 13, color: "#444", width: 70 },
+  zoneLabel2: { fontSize: 13, fontWeight: "600" },
+  inputRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  inputDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: "#222" },
+  inputLabel: { fontSize: 14, color: "#555", fontWeight: "600" },
+  inputSub: { fontSize: 12, color: "#333", marginTop: 1 },
+  modalNote: { fontSize: 12, color: "#2a2a2a", marginTop: 20, lineHeight: 18 },
+  closeBtn: { backgroundColor: "#1A1A1A", borderRadius: 14, padding: 16, alignItems: "center", marginTop: 20 },
+  closeBtnText: { color: "#555", fontSize: 15, fontWeight: "600" },
 });

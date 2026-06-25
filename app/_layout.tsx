@@ -27,9 +27,6 @@ export default function RootLayout() {
       <Stack.Screen name="index" options={{ gestureEnabled: false }} />
       <Stack.Screen name="calendar" />
       <Stack.Screen name="dayview" />
-      <Stack.Screen name="activity" />
-      <Stack.Screen name="food" />
-      <Stack.Screen name="health" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="stats" />
     </Stack>
